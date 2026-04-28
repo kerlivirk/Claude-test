@@ -1,0 +1,61 @@
+<div class="ph">
+  <div>
+    <h1 class="pt">Single Events &amp; Series</h1>
+    <p class="ps">Manage your events, series and collections</p>
+  </div>
+  <button class="cbtn" [matMenuTriggerFor]="cm">+ Create new</button>
+  <mat-menu #cm><button mat-menu-item>Single Event</button><button mat-menu-item>Series</button></mat-menu>
+</div>
+
+<div class="sr">
+  <div class="sc"><p class="sl">Total Events</p><p class="sv">{{ev().length}}</p></div>
+  <div class="sc"><p class="sl">Active</p><p class="sv g">{{ev().filter(e=>e.status==='Active').length}}</p></div>
+  <div class="sc"><p class="sl">Scheduled</p><p class="sv b">{{ev().filter(e=>e.status==='Scheduled').length}}</p></div>
+  <div class="sc"><p class="sl">Draft</p><p class="sv gr">{{ev().filter(e=>e.status==='Draft').length}}</p></div>
+</div>
+
+<div class="tabs">
+  <button class="tab" [class.ta]="tab==='events'" (click)="tab='events'">Events</button>
+  <button class="tab" [class.ta]="tab==='series'" (click)="tab='series'">Series</button>
+</div>
+
+<div class="fi">
+  <div class="sw">
+    <mat-icon class="si">search</mat-icon>
+    <input class="sin" placeholder="Search events by name or venue..." [(ngModel)]="q" />
+  </div>
+  <select class="fs" [(ngModel)]="sf">
+    <option value="">All statuses</option>
+    <option>Active</option><option>Scheduled</option><option>Draft</option><option>Ended</option>
+  </select>
+</div>
+
+<div class="el">
+  @for (e of fe; track e.id) {
+    <div class="ec">
+      <div class="eb">
+        <div class="etr">
+          <span class="en">{{e.name}}</span>
+          <span class="badge be">Event</span>
+          <span [class]="bs(e.status)">{{e.status}}</span>
+        </div>
+        <p class="ecat">{{e.category}}</p>
+        <div class="em">
+          <span class="mi"><mat-icon class="mico">calendar_today</mat-icon>{{fmtDate(e.date)}}</span>
+          <span class="mi"><mat-icon class="mico">location_on</mat-icon>{{e.venue}}</span>
+          @if (e.totalTickets > 0) {
+            <span class="mi"><mat-icon class="mico">confirmation_number</mat-icon>{{e.ticketsSold}}/{{e.totalTickets}} sold</span>
+            <span [class]="tsCls(e)"><mat-icon class="mico">confirmation_number</mat-icon>{{ts(e)}}</span>
+          }
+        </div>
+      </div>
+      <div class="ea">
+        <button class="ab"><mat-icon>edit</mat-icon>Edit</button>
+        <button class="ab abs"><mat-icon>layers</mat-icon>Start Series</button>
+      </div>
+    </div>
+  }
+  @if (fe.length === 0) {
+    <div class="es"><mat-icon>calendar_today</mat-icon><h3>No events found</h3></div>
+  }
+</div>

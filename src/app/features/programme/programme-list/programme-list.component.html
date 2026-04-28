@@ -1,0 +1,246 @@
+<!-- Page header -->
+<div class="pg-header">
+  <div class="pg-breadcrumb">…/List of events</div>
+  <h1 class="pg-title">Programme of events</h1>
+  <p class="pg-desc">Description text</p>
+</div>
+
+<!-- Top action bar -->
+<div class="top-bar">
+  <div class="tb-left">
+    <div class="search-wrap">
+      <mat-icon class="search-ico">search</mat-icon>
+      <input class="search-input" placeholder="Search by Name, ID or venue" [(ngModel)]="searchQuery" />
+    </div>
+    <div class="date-wrap">
+      <span class="date-label">Date</span>
+      <div class="date-input-wrap">
+        <input type="date" class="date-input" [(ngModel)]="filterDate" />
+      </div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="create-split">
+      <button class="btn-create" [matMenuTriggerFor]="createMenu"><mat-icon class="btn-ico">add</mat-icon>Create</button>
+      <button class="btn-create-arrow" [matMenuTriggerFor]="createMenu"><mat-icon class="btn-arrow-ico">arrow_drop_down</mat-icon></button>
+    </div>
+    <mat-menu #createMenu>
+      <button mat-menu-item>Single Event</button>
+      <button mat-menu-item>Series</button>
+    </mat-menu>
+    <div class="other-split">
+      <button class="btn-other" [matMenuTriggerFor]="otherMenu">Other buttons</button>
+      <button class="btn-other-arrow" [matMenuTriggerFor]="otherMenu"><mat-icon class="btn-arrow-ico">arrow_drop_down</mat-icon></button>
+    </div>
+    <mat-menu #otherMenu>
+      <button mat-menu-item>Duplicate</button>
+      <button mat-menu-item>Archive</button>
+    </mat-menu>
+  </div>
+</div>
+
+<!-- Filters row -->
+<div class="filters-row">
+  <div class="filters-left">
+    <button class="filter-chip" [matMenuTriggerFor]="locMenu">Location ({{ selectedLocations.length }}) <mat-icon class="chip-arrow">expand_more</mat-icon></button>
+    <mat-menu #locMenu>
+      <button mat-menu-item>Tallinn Arena</button>
+      <button mat-menu-item>Song Festival Grounds</button>
+    </mat-menu>
+
+    <button class="filter-chip" [matMenuTriggerFor]="statusMenu">Status ({{ selectedStatuses.length }}) <mat-icon class="chip-arrow">expand_more</mat-icon></button>
+    <mat-menu #statusMenu>
+      <button mat-menu-item>Published</button>
+      <button mat-menu-item>Draft</button>
+      <button mat-menu-item>Scheduled</button>
+      <button mat-menu-item>Hidden</button>
+    </mat-menu>
+
+    <div class="time-pills">
+      @for (pill of timePills; track pill) {
+        <button class="pill" [class.pill-active]="activeTimePill() === pill" (click)="activeTimePill.set(pill)">{{ pill }}</button>
+      }
+    </div>
+  </div>
+
+  <div class="filters-right">
+    <button class="btn-ghost"><mat-icon class="btn-ghost-ico">info_outline</mat-icon>Embed info</button>
+    <button class="btn-ghost"><mat-icon class="btn-ghost-ico">download</mat-icon>Download report</button>
+  </div>
+</div>
+
+<!-- Bulk select + legend -->
+<div class="bulk-row">
+  <div class="bulk-left">
+    <span class="bulk-label">Bulk select</span>
+    <button class="bulk-toggle" [class.bulk-active]="bulkSelect()" (click)="bulkSelect.update(v => !v)">
+      <span class="bulk-knob"></span>
+    </button>
+  </div>
+  <div class="legend">
+    <span class="legend-label">Sales Status Legend:</span>
+    <span class="legend-item"><span class="leg-dot leg-sold"></span>Sold</span>
+    <span class="legend-item"><span class="leg-dot leg-reserved"></span>Reserved</span>
+    <span class="legend-item"><span class="leg-dot leg-blocked"></span>Blocked</span>
+    <span class="legend-item"><span class="leg-dot leg-avail"></span>Available</span>
+  </div>
+</div>
+
+<!-- Events table -->
+<div class="events-table-wrap">
+  <table class="ev-table">
+    <thead>
+      <tr>
+        <th class="th-expand"></th>
+        <th class="th-name">
+          <button class="th-sort" (click)="toggleSort('name')">
+            Name
+            <mat-icon class="sort-ico">{{ sortCol() === 'name' ? (sortDir() === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </button>
+        </th>
+        <th class="th-date">
+          <button class="th-sort" (click)="toggleSort('date')">
+            Date
+            <mat-icon class="sort-ico-info">info_outline</mat-icon>
+            <mat-icon class="sort-ico">{{ sortCol() === 'date' ? (sortDir() === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </button>
+          <span class="tz-badge">Local timezone</span>
+        </th>
+        <th>Venue</th>
+        <th>Seated</th>
+        <th>General Admission</th>
+        <th>Status</th>
+        <th class="th-edited">
+          <button class="th-sort" (click)="toggleSort('lastEdited')">
+            Last edited
+            <mat-icon class="sort-ico">{{ sortCol() === 'lastEdited' ? (sortDir() === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </button>
+        </th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (ev of filteredEvents(); track ev.id) {
+        <tr class="ev-row" [class.ev-row-expanded]="ev.expanded">
+          <td class="td-expand">
+            <button class="expand-btn" (click)="ev.expanded = !ev.expanded">
+              <mat-icon class="expand-ico">{{ ev.expanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+            </button>
+          </td>
+          <td class="td-name">
+            <span class="ev-name">{{ ev.name }}</span>
+            <span class="ev-eid">Event ID: {{ ev.eventId }}</span>
+            @if (ev.nameBadge) {
+              <span class="ev-name-badge" [class]="'badge-' + ev.nameBadge.toLowerCase()">{{ ev.nameBadge }}</span>
+            }
+            @if (ev.locked) {
+              <mat-icon class="lock-ico">lock</mat-icon>
+            }
+          </td>
+          <td class="td-date">{{ fmtDate(ev.date) }}<br/><span class="td-time">{{ ev.time }}</span></td>
+          <td class="td-venue">{{ ev.venue }}<br/><span class="td-city">{{ ev.venueCity }}</span></td>
+          <td class="td-tickets"><app-ticket-progress-bar [alloc]="ev.seated" /></td>
+          <td class="td-tickets">
+            @if (ev.generalAdmission.total > 0) {
+              <app-ticket-progress-bar [alloc]="ev.generalAdmission" />
+            } @else {
+              <span class="td-ga-empty">Total: {{ ev.generalAdmission.total }}&nbsp;&nbsp;S.R: {{ ev.generalAdmission.sellRatio }}%</span>
+            }
+          </td>
+          <td class="td-status">
+            <span class="status-badge" [class]="'sb-' + ev.status.toLowerCase()">
+              @switch (ev.status) {
+                @case ('Hidden') { <mat-icon class="sb-ico">visibility_off</mat-icon> }
+                @case ('Scheduled') { <mat-icon class="sb-ico">schedule</mat-icon> }
+                @case ('Published') { <mat-icon class="sb-ico">check_circle</mat-icon> }
+                @case ('Draft') { <mat-icon class="sb-ico">description</mat-icon> }
+                @case ('Cancelled') { <mat-icon class="sb-ico">cancel</mat-icon> }
+              }
+              {{ ev.status }}
+            </span>
+          </td>
+          <td class="td-edited">{{ ev.lastEdited }}</td>
+          <td class="td-actions">
+            <button class="act-dots" [matMenuTriggerFor]="rowMenu"><mat-icon>more_horiz</mat-icon></button>
+            <mat-menu #rowMenu>
+              <button mat-menu-item>Edit</button>
+              <button mat-menu-item>Duplicate</button>
+              <button mat-menu-item>Delete</button>
+            </mat-menu>
+            <button class="act-edit"><mat-icon>edit</mat-icon></button>
+          </td>
+        </tr>
+
+        @if (ev.expanded && ev.salesData) {
+          <tr class="ev-expanded-row">
+            <td [attr.colspan]="9">
+              <app-sales-chart [data]="ev.salesData" />
+            </td>
+          </tr>
+        }
+
+        @if (ev.expanded && ev.children) {
+          @for (child of ev.children; track child.id) {
+            <tr class="ev-row ev-child-row">
+              <td class="td-expand">
+                <button class="expand-btn">
+                  <mat-icon class="expand-ico">chevron_right</mat-icon>
+                </button>
+              </td>
+              <td class="td-name">
+                <span class="ev-name">{{ child.name }}</span>
+                <span class="ev-eid">Event ID: {{ child.eventId }}</span>
+                @if (child.locked) {
+                  <mat-icon class="lock-ico">lock</mat-icon>
+                }
+                @if (child.artist) {
+                  <span class="ev-artist">{{ child.artist }}</span>
+                }
+              </td>
+              <td class="td-date">{{ fmtDate(child.date) }}<br/><span class="td-time">{{ child.time }}</span></td>
+              <td class="td-venue">{{ child.venue }}<br/><span class="td-city">{{ child.venueCity }}</span></td>
+              <td class="td-tickets"><app-ticket-progress-bar [alloc]="child.seated" /></td>
+              <td class="td-tickets"><app-ticket-progress-bar [alloc]="child.generalAdmission" /></td>
+              <td class="td-status">
+                <span class="status-badge" [class]="'sb-' + child.status.toLowerCase()">
+                  @switch (child.status) {
+                    @case ('Published') { <mat-icon class="sb-ico">check_circle</mat-icon> }
+                    @case ('Draft') { <mat-icon class="sb-ico">description</mat-icon> }
+                    @default { <mat-icon class="sb-ico">schedule</mat-icon> }
+                  }
+                  {{ child.status }}
+                </span>
+              </td>
+              <td class="td-edited">{{ child.lastEdited }}</td>
+              <td class="td-actions">
+                <button class="act-dots" [matMenuTriggerFor]="childMenu"><mat-icon>more_horiz</mat-icon></button>
+                <mat-menu #childMenu>
+                  <button mat-menu-item>Edit</button>
+                  <button mat-menu-item>Duplicate</button>
+                </mat-menu>
+                <button class="act-edit"><mat-icon>edit</mat-icon></button>
+              </td>
+            </tr>
+          }
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+  <div class="pag-left">
+    Items per page:
+    <select class="pag-select" [(ngModel)]="pageSize">
+      <option [value]="10">10</option>
+      <option [value]="25">25</option>
+      <option [value]="50">50</option>
+    </select>
+  </div>
+  <div class="pag-right">
+    <span class="pag-info">{{ pagStart() }} – {{ pagEnd() }} of {{ totalEvents() }}</span>
+    <button class="pag-btn" [disabled]="currentPage() <= 1" (click)="currentPage.update(v => v - 1)"><mat-icon>chevron_left</mat-icon></button>
+    <button class="pag-btn" [disabled]="pagEnd() >= totalEvents()" (click)="currentPage.update(v => v + 1)"><mat-icon>chevron_right</mat-icon></button>
+  </div>
+</div>
