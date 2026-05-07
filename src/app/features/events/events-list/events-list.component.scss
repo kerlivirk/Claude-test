@@ -1,45 +1,254 @@
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
-.pt{font-size:24px;font-weight:700;color:#11002b;margin:0 0 4px;font-family:Mulish,sans-serif}
-.ps{font-size:14px;color:#84738f;margin:0;font-family:Mulish,sans-serif}
-.cbtn{display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;background:#06d373;color:#11002b;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:Mulish,sans-serif}
-.cbtn:hover{background:#4fd991}
-.sr{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-.sc{background:#fff;border:1px solid #e9e7ed;border-radius:12px;padding:16px 20px}
-.sl{font-size:12px;color:#84738f;margin:0 0 6px;font-family:Mulish,sans-serif}
-.sv{font-size:24px;font-weight:700;color:#11002b;margin:0;font-family:Mulish,sans-serif}
-.g{color:#1b9e5a}.b{color:#1565c0}.gr{color:#84738f}
-.tabs{display:flex;background:#fff;border:1px solid #e9e7ed;border-radius:12px;margin-bottom:12px;overflow:hidden}
-.tab{flex:1;padding:12px;border:none;background:transparent;font-size:14px;font-weight:500;color:#84738f;cursor:pointer;font-family:Mulish,sans-serif;border-bottom:2px solid transparent;transition:all .15s}
-.tab:hover{background:#f4f2f5}
-.ta{color:#11002b!important;border-bottom-color:#06d373!important;font-weight:600!important}
-.fi{display:flex;gap:12px;margin-bottom:12px}
-.sw{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e9e7ed;border-radius:8px;padding:0 12px;height:40px}
-.si{font-size:18px;color:#c1bacb}
-.sin{flex:1;border:none;outline:none;font-size:14px;font-family:Mulish,sans-serif;color:#11002b;background:transparent}
-.fs{width:180px;height:40px;border:1px solid #e9e7ed;border-radius:8px;padding:0 12px;font-size:14px;font-family:Mulish,sans-serif;color:#11002b;background:#fff;cursor:pointer;outline:none}
-.el{display:flex;flex-direction:column;gap:8px}
-.ec{background:#fff;border:1px solid #d7dbe0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;transition:box-shadow .15s,border-color .15s}
-.ec:hover{box-shadow:0 2px 8px rgba(17,0,43,.08);border-color:#c1bacb}
-.eb{flex:1}
-.etr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
-.en{font-size:18px;font-weight:600;color:#11002b;font-family:Mulish,sans-serif}
-.en:hover{text-decoration:underline}
-.ecat{font-size:13px;color:#84738f;margin:0 0 8px;font-family:Mulish,sans-serif}
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600;font-family:Mulish,sans-serif}
-.be{background:#11002b;color:#fff}
-.badge-active{background:#ddfbea;color:#19633d}
-.badge-scheduled{background:#e3f2fd;color:#1565c0}
-.badge-draft{background:#f4f2f5;color:#5a5062}
-.badge-ended{background:#f4f2f5;color:#84738f}
-.badge-hidden{background:#fff3e0;color:#e65100}
-.em{display:flex;flex-wrap:wrap;gap:16px}
-.mi{display:flex;align-items:center;gap:6px;font-size:13px;color:#84738f;font-family:Mulish,sans-serif}
-.mico{font-size:14px;width:14px;height:14px;color:#c1bacb}
-.tg{color:#1b9e5a;font-weight:600}.tr{color:#ff0032;font-weight:600}.to{color:#efb100;font-weight:600}
-.ea{display:flex;gap:8px;flex-shrink:0}
-.ab{display:inline-flex;align-items:center;gap:4px;padding:0 12px;height:32px;border:1px solid #d7dbe0;border-radius:8px;background:#fff;font-size:13px;font-weight:500;color:#11002b;cursor:pointer;font-family:Mulish,sans-serif;transition:all .15s}
-.ab:hover{background:#f4f2f5}
-.abs{border-color:#ae9edd}
-.es{background:#fff;border:1px solid #e9e7ed;border-radius:12px;padding:64px;text-align:center;color:#84738f}
-.es mat-icon{font-size:48px;width:48px;height:48px;color:#dbd7e2;display:block;margin:0 auto 12px}
-.es h3{font-size:18px;color:#11002b;margin:0;font-family:Mulish,sans-serif}
+:host { display: block; }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  font-family: Mulish, sans-serif;
+  letter-spacing: -0.2px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  font-family: Mulish, sans-serif;
+}
+
+.create-btn {
+  height: 44px !important;
+  padding: 0 20px !important;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+
+  mat-icon {
+    margin-right: 4px;
+  }
+}
+
+.status-tabs {
+  margin-bottom: 16px;
+
+  ::ng-deep .mat-mdc-tab-labels {
+    border-bottom: 1px solid var(--stroke-default);
+  }
+
+  ::ng-deep .mdc-tab__text-label {
+    font-family: Mulish, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: var(--text-muted);
+  }
+
+  ::ng-deep .mdc-tab--active .mdc-tab__text-label {
+    color: var(--text-primary) !important;
+  }
+}
+
+.filters-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.search-field {
+  flex: 1 1 320px;
+}
+
+.type-field {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.venue-field {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #f8f8fa;
+  border: 1px solid var(--stroke-default);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.bulk-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-right: 8px;
+}
+
+.table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--stroke-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+table.mat-mdc-table {
+  width: 100%;
+  background: transparent;
+}
+
+::ng-deep .mat-mdc-header-cell {
+  background: var(--bg-subtle);
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 12px 16px !important;
+}
+
+::ng-deep .mat-mdc-cell {
+  font-size: 14px;
+  color: var(--text-primary);
+  padding: 14px 16px !important;
+  font-family: Mulish, sans-serif;
+}
+
+.data-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.data-row:hover {
+  background: var(--bg-hover);
+}
+
+.name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 320px;
+}
+
+.row-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.kind-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+
+  &.event {
+    background: var(--brand-primary);
+    color: #fff;
+  }
+
+  &.series {
+    background: var(--brand-secondary);
+    color: var(--brand-primary);
+  }
+}
+
+.row-id {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.tickets-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.t-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.t-bar {
+  height: 4px;
+  background: var(--stroke-default);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.t-bar-fill {
+  height: 100%;
+  background: var(--brand-secondary);
+  transition: width 0.3s ease;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.actions-col {
+  width: 100px;
+  text-align: right;
+}
+
+.no-data-row .mat-cell {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: var(--stroke-strong);
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+::ng-deep .mat-mdc-paginator {
+  background: transparent;
+  border-top: 1px solid var(--stroke-default);
+}
+
+::ng-deep .mat-sort-header-arrow {
+  color: var(--text-muted);
+}

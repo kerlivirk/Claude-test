@@ -1,19 +1,99 @@
 @use '@angular/material' as mat;
 
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
 html {
   @include mat.theme((
-    color: (primary: mat.$violet-palette, tertiary: mat.$green-palette),
+    color: (
+      primary: mat.$violet-palette,
+      tertiary: mat.$green-palette,
+    ),
     typography: Mulish,
     density: 0,
   ));
+
+  /* Brand tokens — referenced throughout the app */
+  --brand-primary: #11002b;
+  --brand-primary-hover: #1d0a3d;
+  --brand-secondary: #06d373;
+  --brand-secondary-dark: #1b9e5a;
+  --brand-accent: #9d85d0;
+
+  --text-primary: #11002b;
+  --text-secondary: #5a5062;
+  --text-muted: #84738f;
+
+  --bg-page: #fff;
+  --bg-surface: #fff;
+  --bg-sidebar: #f5f5f5;
+  --bg-subtle: #f8f8fa;
+  --bg-hover: rgba(17, 0, 43, 0.05);
+
+  --stroke-default: #e9e7ed;
+  --stroke-strong: #dbd7e2;
+
+  --status-active-bg: #ddfbea;
+  --status-active-fg: #19633d;
+  --status-scheduled-bg: #e3f2fd;
+  --status-scheduled-fg: #1565c0;
+  --status-draft-bg: #f4f2f5;
+  --status-draft-fg: #5a5062;
+  --status-ended-bg: #f4f2f5;
+  --status-ended-fg: #84738f;
+  --status-hidden-bg: #fff3e0;
+  --status-hidden-fg: #e65100;
+  --status-cancelled-bg: #fdecea;
+  --status-cancelled-fg: #c62828;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;900&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-
 *, *::before, *::after { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; font-family: Mulish, sans-serif; background: #f4f2f5; color: #11002b; -webkit-font-smoothing: antialiased; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Mulish, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f4f2f5; }
-::-webkit-scrollbar-thumb { background: #dbd7e2; border-radius: 9999px; }
+::-webkit-scrollbar-track { background: var(--bg-subtle); }
+::-webkit-scrollbar-thumb { background: var(--stroke-strong); border-radius: var(--radius-pill); }
+
+/* Material density / typography overrides */
+.mat-mdc-form-field { font-family: Mulish, sans-serif; }
+.mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .mat-mdc-text-button {
+  font-family: Mulish, sans-serif;
+  letter-spacing: 0.1px;
+}
+.mat-mdc-tab .mdc-tab__text-label { font-family: Mulish, sans-serif; font-weight: 600; }
+.mat-mdc-table { font-family: Mulish, sans-serif; }
+.mat-mdc-menu-item { font-family: Mulish, sans-serif; }
+
+/* Status chip helper */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: Mulish, sans-serif;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+
+  &.active    { background: var(--status-active-bg); color: var(--status-active-fg); }
+  &.scheduled { background: var(--status-scheduled-bg); color: var(--status-scheduled-fg); }
+  &.draft     { background: var(--status-draft-bg); color: var(--status-draft-fg); }
+  &.ended     { background: var(--status-ended-bg); color: var(--status-ended-fg); }
+  &.hidden    { background: var(--status-hidden-bg); color: var(--status-hidden-fg); }
+  &.cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-fg); }
+}

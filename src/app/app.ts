@@ -6,6 +6,17 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
+interface NavItem {
+  label: string;
+  icon: string;
+  route: string;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -16,36 +27,30 @@ import { MatButtonModule } from '@angular/material/button';
     <mat-sidenav-container class="app-container">
       <mat-sidenav mode="side" opened class="app-sidenav">
         <div class="logo">
-          <span>🎫</span><span class="logo-text">PLG Back Office</span>
+          <span class="logo-icon">🎫</span>
+          <span class="logo-text">PLG Back Office</span>
         </div>
         <nav class="nav">
-          <p class="nav-group">EVENTS & SERIES</p>
-          <a routerLink="/programme" routerLinkActive="nav-active" class="nav-item">
-            <mat-icon class="nav-icon">view_list</mat-icon>
-            <span>Programme of Events</span>
-          </a>
-          <a routerLink="/events" routerLinkActive="nav-active" class="nav-item">
-            <mat-icon class="nav-icon">calendar_today</mat-icon>
-            <span>Single Events & Series</span>
-          </a>
-          <a routerLink="/collections" routerLinkActive="nav-active" class="nav-item">
-            <mat-icon class="nav-icon">folder_open</mat-icon>
-            <span>Collections</span>
-          </a>
-          <p class="nav-group">REPORTS</p>
-          <a routerLink="/reports" routerLinkActive="nav-active" class="nav-item">
-            <mat-icon class="nav-icon">bar_chart</mat-icon>
-            <span>Sales Overview</span>
-          </a>
-          <p class="nav-group">SETTINGS</p>
-          <a routerLink="/settings" routerLinkActive="nav-active" class="nav-item">
-            <mat-icon class="nav-icon">settings</mat-icon>
-            <span>General Settings</span>
-          </a>
+          @for (group of navGroups; track group.title) {
+            <div class="nav-group">
+              <p class="nav-group-title">{{ group.title }}</p>
+              <div class="nav-items">
+                @for (item of group.items; track item.route) {
+                  <a [routerLink]="item.route" routerLinkActive="nav-active" class="nav-item">
+                    <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+                    <span class="nav-label">{{ item.label }}</span>
+                  </a>
+                }
+              </div>
+            </div>
+          }
         </nav>
         <div class="user">
           <div class="avatar">AK</div>
-          <div><p class="uname">Annika Kütt</p><p class="urole">Admin</p></div>
+          <div class="user-info">
+            <p class="uname">Annika Kütt</p>
+            <p class="urole">Admin</p>
+          </div>
         </div>
       </mat-sidenav>
       <mat-sidenav-content class="app-content">
@@ -61,23 +66,131 @@ import { MatButtonModule } from '@angular/material/button';
   `,
   styles: [`
     .app-container { height: 100vh; }
-    .app-sidenav { width: 244px; background: #11002b; border-right: none; display: flex; flex-direction: column; }
-    .logo { display: flex; align-items: center; gap: 10px; padding: 20px 16px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
-    .logo-text { font-size: 13px; font-weight: 700; color: #fff; font-family: Mulish, sans-serif; }
-    .nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
-    .nav-group { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: rgba(255,255,255,.3); margin: 16px 0 6px 8px; font-family: Mulish, sans-serif; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,.6); font-size: 13px; font-weight: 500; font-family: Mulish, sans-serif; margin-bottom: 2px; transition: all .15s; }
-    .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
-    .nav-active { background: #06d373 !important; color: #11002b !important; font-weight: 600; }
-    .nav-icon { font-size: 18px; width: 18px; height: 18px; color: inherit; }
-    .user { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-top: 1px solid rgba(255,255,255,.08); }
-    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #06d373; color: #11002b; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: Mulish, sans-serif; flex-shrink: 0; }
-    .uname { font-size: 13px; font-weight: 600; color: #fff; margin: 0; font-family: Mulish, sans-serif; }
-    .urole { font-size: 11px; color: rgba(255,255,255,.4); margin: 0; font-family: Mulish, sans-serif; }
-    .app-content { background: #f4f2f5; }
-    .topbar { background: #fff; border-bottom: 1px solid #e9e7ed; height: 56px; display: flex; align-items: center; justify-content: flex-end; padding: 0 24px; position: sticky; top: 0; z-index: 10; }
+    .app-sidenav {
+      width: 244px;
+      background: #f5f5f5;
+      border-right: 1px solid #e9e7ed;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid #e9e7ed;
+    }
+    .logo-icon { font-size: 18px; }
+    .logo-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #11002b;
+      font-family: Mulish, sans-serif;
+    }
+    .nav { flex: 1; padding: 16px 16px; overflow-y: auto; }
+    .nav-group { margin-bottom: 24px; }
+    .nav-group-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      color: #84738f;
+      margin: 0 16px 12px;
+      font-family: Mulish, sans-serif;
+    }
+    .nav-items { display: flex; flex-direction: column; gap: 4px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #11002b;
+      font-size: 14px;
+      font-family: Mulish, sans-serif;
+      letter-spacing: .1px;
+      transition: background .15s;
+    }
+    .nav-item:hover { background: rgba(17,0,43,.05); }
+    .nav-active {
+      background: #11002b !important;
+      color: #fff !important;
+      border-radius: 9999px !important;
+      font-weight: 500;
+    }
+    .nav-active .nav-icon { color: #fff; }
+    .nav-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #11002b;
+      flex-shrink: 0;
+    }
+    .nav-label { flex: 1; }
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border-top: 1px solid #e9e7ed;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #06d373;
+      color: #11002b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: Mulish, sans-serif;
+      flex-shrink: 0;
+    }
+    .user-info { min-width: 0; }
+    .uname { font-size: 13px; font-weight: 600; color: #11002b; margin: 0; font-family: Mulish, sans-serif; }
+    .urole { font-size: 11px; color: #84738f; margin: 0; font-family: Mulish, sans-serif; }
+    .app-content { background: #fff; }
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid #e9e7ed;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
     .topbar-right { display: flex; gap: 4px; }
-    .page { padding: 24px; }
+    .page { padding: 24px; min-height: calc(100vh - 56px); }
   `]
 })
-export class App {}
+export class App {
+  navGroups: NavGroup[] = [
+    {
+      title: 'EVENTS & SERIES',
+      items: [
+        { label: 'Dashboard', icon: 'bar_chart', route: '/dashboard' },
+        { label: 'Single Events & Series', icon: 'calendar_today', route: '/events' },
+        { label: 'Collections', icon: 'sell', route: '/collections' },
+        { label: 'Programme of all events', icon: 'event', route: '/programme' },
+        { label: 'Add-ons Configuration', icon: 'extension', route: '/addons' },
+      ],
+    },
+    {
+      title: 'TICKET SETUP',
+      items: [
+        { label: 'Templates', icon: 'confirmation_number', route: '/templates' },
+      ],
+    },
+    {
+      title: 'EVENT SETTINGS',
+      items: [
+        { label: 'Event templates', icon: 'content_copy', route: '/event-templates' },
+      ],
+    },
+  ];
+}
