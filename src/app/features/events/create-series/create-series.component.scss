@@ -1,0 +1,247 @@
+:host { display: block; height: 100vh; }
+
+.cs-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-subtle);
+  font-family: Mulish, sans-serif;
+}
+
+.cs-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--stroke-default);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.cs-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cs-breadcrumb {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: .2px;
+  text-transform: uppercase;
+}
+
+.cs-title {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60ch;
+}
+
+.cs-topbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cs-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.cs-grid {
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cs-card {
+  background: #fff;
+  border: 1px solid var(--stroke-default);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cs-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.cs-card-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cs-card-header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cs-events-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cs-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cs-lang-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.cs-lang-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cs-lang-chip {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke-default);
+  background: #fff;
+  cursor: pointer;
+  font-family: Mulish, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .15s;
+}
+
+.cs-lang-chip:hover {
+  background: var(--bg-subtle);
+}
+
+.cs-lang-chip.has-content::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-secondary);
+}
+
+.cs-lang-chip.active {
+  background: var(--brand-primary);
+  color: #fff;
+  border-color: var(--brand-primary);
+}
+
+.cs-lang-chip.active.has-content::after {
+  background: var(--brand-secondary);
+}
+
+.full { width: 100%; }
+.grow { flex: 1; }
+.cs-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.auto-slug {
+  height: 56px;
+  white-space: nowrap;
+}
+
+.cs-events-table {
+  width: 100%;
+  background: transparent;
+}
+
+::ng-deep .cs-events-table .mat-mdc-header-cell {
+  background: var(--bg-subtle);
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+::ng-deep .cs-events-table .mat-mdc-cell {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.cs-ev-name {
+  font-weight: 600;
+}
+
+.cs-actions {
+  text-align: right;
+  width: 100px;
+}
+
+.is-main {
+  color: #efb100;
+}
+
+.cs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--stroke-default);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.cs-empty mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--stroke-strong);
+}
+
+.cs-empty h3 {
+  margin: 4px 0 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.cs-empty p {
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .cs-row { flex-direction: column; }
+  .auto-slug { height: 40px; align-self: flex-start; }
+  .cs-events-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+}

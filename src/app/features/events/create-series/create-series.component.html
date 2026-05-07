@@ -1,0 +1,165 @@
+<div class="cs-shell">
+  <!-- Top bar -->
+  <header class="cs-topbar">
+    <div class="cs-topbar-left">
+      <button mat-icon-button (click)="cancel()" matTooltip="Back to events">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="cs-breadcrumb">Single Events &amp; Series / {{ isEdit() ? 'Edit series' : 'Create series' }}</p>
+        <h1 class="cs-title">{{ isEdit() ? (names()['Universal'] || 'Untitled series') : 'Create new series' }}</h1>
+      </div>
+    </div>
+    <div class="cs-topbar-actions">
+      <button mat-stroked-button (click)="cancel()">Cancel</button>
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="!canSave()">
+        <mat-icon>check</mat-icon>
+        {{ isEdit() ? 'Save changes' : 'Create series' }}
+      </button>
+    </div>
+  </header>
+
+  <main class="cs-body">
+    <div class="cs-grid">
+      <section class="cs-card">
+        <div class="cs-card-header">
+          <h2>Series details</h2>
+          <p>Name, description and identifiers shown on the public page.</p>
+        </div>
+
+        <!-- Language picker -->
+        <div class="cs-lang-row">
+          <span class="cs-lang-label">Language</span>
+          <div class="cs-lang-chips">
+            @for (l of languages; track l.code) {
+              <button class="cs-lang-chip"
+                      [class.active]="selectedLanguage() === l.code"
+                      [class.has-content]="langHasContent(l.code)"
+                      (click)="setLanguage(l.code)">
+                {{ l.code }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Series name ({{ selectedLanguage() }})</mat-label>
+          <input matInput
+                 [ngModel]="getCurrentName()"
+                 (ngModelChange)="setCurrentName($event)"
+                 placeholder="e.g. Summer Jazz Festival 2026" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Description ({{ selectedLanguage() }})</mat-label>
+          <textarea matInput rows="5"
+                    [ngModel]="getCurrentDescription()"
+                    (ngModelChange)="setCurrentDescription($event)"
+                    placeholder="Describe the series for ticket buyers..."></textarea>
+        </mat-form-field>
+
+        <div class="cs-row">
+          <mat-form-field appearance="outline" class="grow">
+            <mat-label>Slug</mat-label>
+            <input matInput [ngModel]="slug()" (ngModelChange)="slug.set($event)" [disabled]="autoSlug()" />
+            <mat-hint>URL: /series/{{ slug() || 'your-series' }}</mat-hint>
+          </mat-form-field>
+          <button mat-stroked-button class="auto-slug" (click)="toggleAutoSlug()">
+            <mat-icon>{{ autoSlug() ? 'lock' : 'lock_open' }}</mat-icon>
+            {{ autoSlug() ? 'Auto from name' : 'Manual edit' }}
+          </button>
+        </div>
+
+        <div class="cs-row">
+          <mat-form-field appearance="outline" class="grow">
+            <mat-label>Legal entity</mat-label>
+            <mat-select [ngModel]="legalEntity()" (ngModelChange)="legalEntity.set($event)">
+              @for (le of legalEntities; track le) {
+                <mat-option [value]="le">{{ le }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="grow">
+            <mat-label>Cover image URL</mat-label>
+            <input matInput [ngModel]="coverImage()" (ngModelChange)="coverImage.set($event)" placeholder="https://..." />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="cs-card">
+        <div class="cs-card-header cs-events-header">
+          <div>
+            <h2>Events in this series</h2>
+            <p>{{ events().length }} event{{ events().length === 1 ? '' : 's' }} · The main event is featured at checkout.</p>
+          </div>
+          <button mat-flat-button color="primary" (click)="openAddEvent()">
+            <mat-icon>add</mat-icon>
+            Add event
+          </button>
+        </div>
+
+        @if (events().length > 0) {
+          <table mat-table [dataSource]="events()" class="cs-events-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Event</th>
+              <td mat-cell *matCellDef="let e">
+                <span class="cs-ev-name">{{ e.name }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let e">{{ formatDate(e.date) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="venue">
+              <th mat-header-cell *matHeaderCellDef>Venue</th>
+              <td mat-cell *matCellDef="let e">{{ e.venue }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef>Category</th>
+              <td mat-cell *matCellDef="let e">{{ e.category }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="main">
+              <th mat-header-cell *matHeaderCellDef>Main</th>
+              <td mat-cell *matCellDef="let e">
+                <button mat-icon-button (click)="setMain(e.id)" [matTooltip]="mainEventId() === e.id ? 'Main event' : 'Set as main event'">
+                  <mat-icon [class.is-main]="mainEventId() === e.id">
+                    {{ mainEventId() === e.id ? 'star' : 'star_border' }}
+                  </mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="cs-actions"></th>
+              <td mat-cell *matCellDef="let e" class="cs-actions">
+                <button mat-icon-button (click)="openAddEvent(e)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="removeEvent(e.id)" matTooltip="Remove">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="eventColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: eventColumns;"></tr>
+          </table>
+        } @else {
+          <div class="cs-empty">
+            <mat-icon>event_note</mat-icon>
+            <h3>No events yet</h3>
+            <p>Add the first event so this series has something to sell.</p>
+            <button mat-flat-button color="primary" (click)="openAddEvent()">
+              <mat-icon>add</mat-icon>
+              Add first event
+            </button>
+          </div>
+        }
+      </section>
+    </div>
+  </main>
+</div>

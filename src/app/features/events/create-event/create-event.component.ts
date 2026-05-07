@@ -302,28 +302,42 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     </mat-stepper>
   `,
   styles: [`
+    :host {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg-subtle, #f8f8fa);
+      font-family: Mulish, sans-serif;
+    }
+
     .create-header {
       display: flex;
       align-items: center;
       gap: 1rem;
-      margin-bottom: 1.5rem;
-      background: var(--bg-surface, #fff);
-      padding: 1rem 1.5rem;
-      border-radius: var(--radius-lg, 0.75rem);
-      border: 1px solid var(--stroke-on-surface-primary, #e9e7ed);
+      background: #fff;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--stroke-default, #e9e7ed);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      margin: 0;
+      border-radius: 0;
     }
 
     .create-title {
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       font-weight: 700;
-      color: var(--text-on-surface-primary, #11002b);
-      margin: 0 0 0.125rem;
+      color: var(--text-primary, #11002b);
+      margin: 0;
+      line-height: 1.2;
     }
 
     .create-subtitle {
-      font-size: 0.8125rem;
-      color: var(--text-on-surface-secondary, #5a5062);
-      margin: 0;
+      font-size: 0.75rem;
+      color: var(--text-muted, #84738f);
+      margin: 2px 0 0;
+      letter-spacing: .2px;
+      text-transform: uppercase;
     }
 
     .header-actions {
@@ -333,22 +347,28 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     }
 
     .save-btn {
-      background-color: var(--bg-brand, #06d373) !important;
-      color: var(--text-on-brand-primary, #11002b) !important;
+      background-color: var(--brand-secondary, #06d373) !important;
+      color: var(--brand-primary, #11002b) !important;
       font-weight: 600 !important;
     }
 
     /* Stepper */
     .stepper {
-      background: var(--bg-surface, #fff);
-      border: 1px solid var(--stroke-on-surface-primary, #e9e7ed);
-      border-radius: var(--radius-lg, 0.75rem);
-      overflow: hidden;
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      overflow: visible;
+      padding: 24px;
+      max-width: 1080px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     .step-content {
-      padding: 1.5rem;
+      padding: 1.5rem 0;
       max-width: 720px;
+      margin: 0 auto;
     }
 
     .form-section {
