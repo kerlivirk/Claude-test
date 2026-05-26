@@ -289,27 +289,19 @@ interface NavSection {
   `]
 })
 export class SidenavComponent {
+  // v6: sidenav scoped to Events & Series management only — Reports, Settings,
+  // Ticket Setup, and Venues sections removed to match design-reference/CreateEvent-v6.tsx.
+  // Restore from git history if any of those need to come back.
   readonly navSections: NavSection[] = [
     {
       label: 'Events & Series',
       items: [
+        { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
         { label: 'Single Events & Series', icon: 'calendar_today', route: '/events' },
+        { label: 'Create new event', icon: 'add_circle_outline', route: '/events/create' },
         { label: 'Collections', icon: 'folder_open', route: '/collections' },
-      ]
-    },
-    {
-      label: 'Reports',
-      items: [
-        { label: 'Sales Overview', icon: 'bar_chart', route: '/reports/sales' },
-        { label: 'Daily Reports', icon: 'today', route: '/reports/daily' },
-      ]
-    },
-    {
-      label: 'Settings',
-      items: [
-        { label: 'General Settings', icon: 'settings', route: '/settings' },
-        { label: 'Venues', icon: 'location_on', route: '/venues' },
-        { label: 'Tracking Pixels', icon: 'track_changes', route: '/tracking' },
+        { label: 'Programme of all events', icon: 'event_note', route: '/programme' },
+        { label: 'Add-ons Configuration', icon: 'extension', route: '/addons' },
       ]
     }
   ];
