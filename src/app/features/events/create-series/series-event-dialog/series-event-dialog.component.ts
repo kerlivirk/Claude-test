@@ -30,7 +30,7 @@ const CATEGORIES = ['Music', 'Theatre', 'Dance', 'Comedy', 'Sports', 'Art', 'Fes
     <div class="dh">
       <h2 mat-dialog-title>{{ data ? 'Edit event' : 'Add event to series' }}</h2>
       <button mat-icon-button mat-dialog-close>
-        <mat-icon>close</mat-icon>
+        <mat-icon>Delete 1</mat-icon>
       </button>
     </div>
 

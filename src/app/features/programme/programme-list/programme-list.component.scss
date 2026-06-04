@@ -70,8 +70,12 @@
 .leg-avail { background: var(--gray-200, #e9e7ed); }
 
 /* Table */
-.events-table-wrap { background: var(--bg-surface, #fff); border: 1px solid var(--stroke-on-surface-primary, #e9e7ed); border-radius: var(--radius-lg, 12px); overflow: hidden; margin-bottom: 12px; }
-.ev-table { width: 100%; border-collapse: collapse; font-family: Mulish, sans-serif; }
+.events-table-wrap { background: var(--bg-surface, #fff); border: 1px solid var(--stroke-on-surface-primary, #e9e7ed); border-radius: var(--radius-lg, 12px); overflow-x: auto; margin-bottom: 12px; }
+.ev-table { width: 100%; min-width: 980px; border-collapse: collapse; font-family: Mulish, sans-serif; }
+
+@media (max-width: 600px) {
+  .pagination { flex-direction: column; gap: 10px; align-items: stretch; }
+}
 
 thead { background: var(--gray-50, #f8f8fa); border-bottom: 1px solid var(--stroke-on-surface-primary, #e9e7ed); }
 th { padding: 10px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--gray-600, #9686a2); text-align: left; white-space: nowrap; }

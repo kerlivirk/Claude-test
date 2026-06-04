@@ -40,25 +40,25 @@ import { Event, EventType } from '../../models/event.model';
           <div class="event-meta">
             @if (event().date) {
               <span class="meta-item">
-                <mat-icon class="meta-icon">calendar_today</mat-icon>
+                <mat-icon class="meta-icon">Blank Calendar</mat-icon>
                 {{ event().date | date:'MMM d, y' }}
               </span>
             }
             @if (event().venue) {
               <span class="meta-item">
-                <mat-icon class="meta-icon">location_on</mat-icon>
+                <mat-icon class="meta-icon">Location Pin 1</mat-icon>
                 {{ event().venue }}
               </span>
             }
             @if (event().totalTickets > 0) {
               <span class="meta-item">
-                <mat-icon class="meta-icon">confirmation_number</mat-icon>
+                <mat-icon class="meta-icon">Ticket</mat-icon>
                 {{ event().ticketsSold }} / {{ event().totalTickets }} sold
               </span>
             }
             @if (ticketState()) {
               <span class="meta-item" [class]="'ticket-state ticket-state--' + ticketStateKey()">
-                <mat-icon class="meta-icon">confirmation_number</mat-icon>
+                <mat-icon class="meta-icon">Ticket</mat-icon>
                 {{ ticketState() }}
               </span>
             }
@@ -73,7 +73,7 @@ import { Event, EventType } from '../../models/event.model';
             (click)="editEvent.emit(event().id)"
             matTooltip="Edit event"
           >
-            <mat-icon>edit</mat-icon>
+            <mat-icon>Pencil</mat-icon>
             Edit
           </button>
           <button
@@ -82,7 +82,7 @@ import { Event, EventType } from '../../models/event.model';
             (click)="startSeries.emit(event().id)"
             matTooltip="Convert to series"
           >
-            <mat-icon>layers</mat-icon>
+            <mat-icon>Layers 1</mat-icon>
             Start Series
           </button>
         </div>

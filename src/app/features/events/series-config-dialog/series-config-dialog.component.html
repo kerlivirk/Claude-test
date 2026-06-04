@@ -1,0 +1,332 @@
+<div class="sc-dialog">
+
+  <!-- Header -->
+  <header class="sc-header">
+    <div class="sc-header-text">
+      <h1>{{ isEdit ? 'Edit Series' : 'Create Series' }}</h1>
+      <p>
+        {{ isEdit
+          ? 'Update the series details. Events that sync with this series will reflect changes.'
+          : 'Fill in the mandatory fields first; the rest is optional and can be edited later.' }}
+      </p>
+    </div>
+    <button class="sc-close" (click)="cancel()" aria-label="Close">
+      <mat-icon>Delete 1</mat-icon>
+    </button>
+  </header>
+
+  <!-- Scrollable body -->
+  <div class="sc-body">
+
+    <!-- ===== Mandatory ===== -->
+
+    <!-- Series Details -->
+    <section class="sc-card">
+      <div class="sc-card-head">
+        <h2><mat-icon>Layers 1</mat-icon> Series Details</h2>
+      </div>
+
+      <div class="sc-field">
+        <app-translations-field
+          [fields]="nameFields"
+          [languages]="languages"
+          [baseLang]="baseLang"
+          [values]="nameValues()"
+          (valuesChange)="onNameValuesChange($event)" />
+        <small class="sc-help">The main name for this series. Add languages with the + button.</small>
+      </div>
+
+      <label class="sc-checkbox">
+        <input type="checkbox" [checked]="autoSlug()" (change)="toggleAutoSlug()" />
+        <span>Auto-generate slug from series name</span>
+      </label>
+
+      <label class="sc-field">
+        <span class="sc-label">Slug</span>
+        <div class="sc-input-prefix">
+          <span class="sc-input-prefix-ico">/</span>
+          <input class="sc-input" type="text" [ngModel]="slug()" (ngModelChange)="slug.set($event)" [disabled]="autoSlug()" placeholder="summer-concerts" />
+        </div>
+        <small class="sc-help">URL-friendly identifier. All events in this series will have URLs like /{{ slug() || 'summer-concerts' }}/event-name</small>
+      </label>
+    </section>
+
+    <!-- Series Description -->
+    <section class="sc-section">
+      <h2 class="sc-section-title">Series Description <span class="sc-req">*</span></h2>
+      <app-translations-field
+        [fields]="descriptionFields"
+        [languages]="languages"
+        [baseLang]="baseLang"
+        [values]="descriptionValues()"
+        (valuesChange)="onDescriptionValuesChange($event)" />
+    </section>
+
+    <!-- Category & Genre -->
+    <section class="sc-section">
+      <div class="sc-field">
+        <span class="sc-label">Category <span class="sc-req">*</span></span>
+        <small class="sc-help-top">Select <strong>one</strong> or <strong>more</strong> categories. Click to add/remove.</small>
+        <app-search-select
+          [options]="categoryOptions"
+          [value]="category()"
+          (valueChange)="category.set($event)"
+          placeholder="Select categories, like Theatre, Sport…"
+          searchPlaceholder="Search categories…"
+          [allowCreate]="true" />
+      </div>
+
+      <div class="sc-field">
+        <span class="sc-label">Genre <span class="sc-req">*</span></span>
+        <small class="sc-help-top">Select <strong>one</strong> or <strong>more</strong> genres. Click to add/remove.</small>
+        <app-search-select
+          [options]="genreOptions"
+          [value]="genre()"
+          (valueChange)="genre.set($event)"
+          placeholder="Select Genre, like Ballet, Comedy…"
+          searchPlaceholder="Search genres…"
+          [allowCreate]="true" />
+      </div>
+    </section>
+
+    <!-- ===== Single collapsible: everything optional ===== -->
+    <section class="sc-card sc-card-collapsible">
+      <button class="sc-card-toggle" (click)="optionalOpen.update(v => !v)" [attr.aria-expanded]="optionalOpen()">
+        <mat-icon class="sc-card-toggle-ico">{{ optionalOpen() ? 'Block 1' : 'Add 1' }}</mat-icon>
+        Optional details
+        <span class="sc-card-toggle-hint">{{ optionalOpen() ? 'Hide' : 'Open to add info texts, cast, dates, venue, organizers, media, internal notes…' }}</span>
+      </button>
+
+      @if (optionalOpen()) {
+        <div class="sc-card-content">
+
+          <!-- Public content blocks (template — inherited by events that sync) -->
+          <h3 class="sc-subhead"><mat-icon>Text File</mat-icon> Public content</h3>
+
+          <div class="sc-field">
+            <small class="sc-help-top">Shown prominently at the top of each event in this series</small>
+            <app-translations-field
+              [fields]="importantInfoFields"
+              [languages]="languages"
+              [baseLang]="baseLang"
+              [values]="importantInfoValues()"
+              (valuesChange)="onImportantInfoValuesChange($event)" />
+          </div>
+
+          <div class="sc-field">
+            <small class="sc-help-top">Extra details shown on each event page</small>
+            <app-translations-field
+              [fields]="additionalDescFields"
+              [languages]="languages"
+              [baseLang]="baseLang"
+              [values]="additionalDescValues()"
+              (valuesChange)="onAdditionalDescValuesChange($event)" />
+          </div>
+
+          <!-- Cast & Creators -->
+          <h3 class="sc-subhead"><mat-icon>User Group</mat-icon> Cast &amp; creators</h3>
+          <label class="sc-field">
+            <span class="sc-label">Cast <span class="sc-optional">(optional)</span></span>
+            <small class="sc-help-top">Free text or select from artist database</small>
+            <div class="sc-input-suffix">
+              <input class="sc-input" type="text" [ngModel]="cast()" (ngModelChange)="cast.set($event)" placeholder="Select cast…" />
+              <mat-icon class="sc-input-ico">Tailless Line Arrow Down 1</mat-icon>
+            </div>
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Creators <span class="sc-optional">(optional)</span></span>
+            <small class="sc-help-top">Only free text</small>
+            <div class="sc-input-suffix">
+              <input class="sc-input" type="text" [ngModel]="creators()" (ngModelChange)="creators.set($event)" placeholder="Add creators…" />
+              <mat-icon class="sc-input-ico">Tailless Line Arrow Down 1</mat-icon>
+            </div>
+          </label>
+
+          <!-- Price info -->
+          <div class="sc-field">
+            <app-translations-field
+              [fields]="priceInfoFields"
+              [languages]="languages"
+              [baseLang]="baseLang"
+              [values]="priceInfoValues()"
+              (valuesChange)="onPriceInfoValuesChange($event)" />
+            <small class="sc-help">Displayed prominently at the top of the event details.</small>
+          </div>
+
+          <!-- Dates -->
+          <div class="sc-grid-2">
+            <label class="sc-field">
+              <span class="sc-label">Start Date</span>
+              <div class="sc-input-suffix">
+                <input class="sc-input" type="text" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" placeholder="Europe / Tallinn" />
+                <mat-icon class="sc-input-ico">Blank Calendar</mat-icon>
+              </div>
+            </label>
+            <label class="sc-field">
+              <span class="sc-label">Start Time</span>
+              <div class="sc-input-suffix">
+                <input class="sc-input" type="text" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)" placeholder="Europe / Tallinn" />
+                <mat-icon class="sc-input-ico">Circle Clock</mat-icon>
+              </div>
+            </label>
+            <label class="sc-field">
+              <span class="sc-label">End Date</span>
+              <div class="sc-input-suffix">
+                <input class="sc-input" type="text" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" placeholder="Europe / Tallinn" />
+                <mat-icon class="sc-input-ico">Blank Calendar</mat-icon>
+              </div>
+            </label>
+            <label class="sc-field">
+              <span class="sc-label">End Time</span>
+              <div class="sc-input-suffix">
+                <input class="sc-input" type="text" [ngModel]="endTime()" (ngModelChange)="endTime.set($event)" placeholder="Europe / Tallinn" />
+                <mat-icon class="sc-input-ico">Circle Clock</mat-icon>
+              </div>
+            </label>
+          </div>
+
+          <!-- Venue & map -->
+          <h3 class="sc-subhead"><mat-icon>Location Pin 1</mat-icon> Event location</h3>
+          <label class="sc-field">
+            <span class="sc-label">Venue</span>
+            <div class="sc-input-suffix">
+              <input class="sc-input" type="text" [ngModel]="venue()" (ngModelChange)="venue.set($event)" />
+              <span class="sc-input-verified"><mat-icon>Check Circle</mat-icon></span>
+            </div>
+          </label>
+
+          <div class="sc-map">
+            <div class="sc-map-grid"></div>
+            <div class="sc-map-pin"><mat-icon>Location Pin 1</mat-icon></div>
+            <div class="sc-map-zoom">
+              <button><mat-icon>Add 1</mat-icon></button>
+              <button><mat-icon>Block 1</mat-icon></button>
+            </div>
+            <div class="sc-map-callout">
+              <mat-icon>Location Pin 1</mat-icon>
+              <div>
+                <strong>{{ venue() }}</strong>
+                <small>Paldiski mnt 104b, Tallinn</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plain location fields -->
+          <label class="sc-field">
+            <span class="sc-label">Location <span class="sc-optional">(optional)</span></span>
+            <input class="sc-input" type="text" [ngModel]="location()" (ngModelChange)="location.set($event)" placeholder="City or address" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Sub-location <span class="sc-optional">(optional)</span></span>
+            <input class="sc-input" type="text" [ngModel]="subLocation()" (ngModelChange)="subLocation.set($event)" placeholder="Hall, room, stage…" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Seating plan <span class="sc-optional">(optional)</span></span>
+            <input class="sc-input" type="text" [ngModel]="seatingPlan()" (ngModelChange)="seatingPlan.set($event)" placeholder="Select seating plan" />
+          </label>
+
+          <!-- Organizer access -->
+          <h3 class="sc-subhead"><mat-icon>User Group</mat-icon> Organizer availability</h3>
+
+          <label class="sc-radio">
+            <input type="radio" name="org-access" [checked]="organizerAccess() === 'all'" (change)="organizerAccess.set('all')" />
+            <span>
+              Available to all organizers
+              <mat-icon class="sc-info" matTooltip="All organizers in your team will be able to view and edit this series">Information Circle</mat-icon>
+            </span>
+          </label>
+
+          <label class="sc-radio">
+            <input type="radio" name="org-access" [checked]="organizerAccess() === 'select'" (change)="organizerAccess.set('select')" />
+            <span>Available to specific organizers (pick from list)</span>
+          </label>
+
+          @if (organizerAccess() === 'select') {
+            <div class="sc-input-suffix sc-mt8">
+              <input class="sc-input" type="text" [ngModel]="selectedOrganizers()" (ngModelChange)="selectedOrganizers.set($event)" placeholder="Pick organizers…" />
+              <mat-icon class="sc-input-ico">Tailless Line Arrow Down 1</mat-icon>
+            </div>
+          }
+
+          <!-- Review & media -->
+          <h3 class="sc-subhead"><mat-icon>Star 1</mat-icon> Review &amp; media</h3>
+
+          <label class="sc-field">
+            <span class="sc-label">Review on homepage</span>
+            <input class="sc-input" type="text" [ngModel]="reviewHomepage()" (ngModelChange)="reviewHomepage.set($event)" placeholder="Quote or short review" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Author of review</span>
+            <input class="sc-input" type="text" [ngModel]="reviewAuthor()" (ngModelChange)="reviewAuthor.set($event)" placeholder="Reviewer name" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">VOD links</span>
+            <input class="sc-input" type="text" [ngModel]="vodLinks()" (ngModelChange)="vodLinks.set($event)" placeholder="https://…" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Poster</span>
+            <input class="sc-input" type="text" [ngModel]="poster()" (ngModelChange)="poster.set($event)" placeholder="Poster image URL" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Photos</span>
+            <input class="sc-input" type="text" [ngModel]="photos()" (ngModelChange)="photos.set($event)" placeholder="Gallery URLs (comma separated)" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Photo source</span>
+            <input class="sc-input" type="text" [ngModel]="photoSource()" (ngModelChange)="photoSource.set($event)" placeholder="Credit / source" />
+          </label>
+
+          <label class="sc-field">
+            <span class="sc-label">Multimedia (YouTube URL)</span>
+            <input class="sc-input" type="text" [ngModel]="multimedia()" (ngModelChange)="multimedia.set($event)" placeholder="https://youtube.com/…" />
+          </label>
+
+          <!-- Internal Information (template — inherited by events that sync) -->
+          <h3 class="sc-subhead"><mat-icon>Chat Bubble Text Oval</mat-icon> Internal information</h3>
+          <small class="sc-help-top">Visible only to internal users, cashiers and POS — not shown to buyers</small>
+
+          <div class="sc-field">
+            <app-translations-field
+              [fields]="cashierInstructionsFields"
+              [languages]="languages"
+              [baseLang]="baseLang"
+              [values]="cashierInstructionsValues()"
+              (valuesChange)="onCashierInstructionsValuesChange($event)" />
+          </div>
+
+          <div class="sc-field">
+            <app-translations-field
+              [fields]="posNotesFields"
+              [languages]="languages"
+              [baseLang]="baseLang"
+              [values]="posNotesValues()"
+              (valuesChange)="onPosNotesValuesChange($event)" />
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="sc-footer">
+    <button class="sc-btn sc-btn-ghost" (click)="cancel()">Cancel</button>
+    @if (isEdit) {
+      <button class="sc-btn sc-btn-secondary" [disabled]="!canSubmit()" (click)="openSeries()">
+        <mat-icon>Layers 1</mat-icon>
+        Manage events
+      </button>
+    }
+    <button class="sc-btn sc-btn-primary" [disabled]="!canSubmit()" (click)="submit()">
+      <mat-icon>Check</mat-icon>
+      {{ isEdit ? 'Save changes' : 'Create Series' }}
+    </button>
+  </footer>
+</div>

@@ -1,11 +1,17 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TicketProgressBarComponent } from '../components/ticket-progress-bar/ticket-progress-bar.component';
 import { SalesChartComponent } from '../components/sales-chart/sales-chart.component';
 import { ProgrammeEvent, MOCK_PROGRAMME } from '../models/programme-event.model';
+import { EventStructureDialogComponent, EventStructureChoice } from '../../events/event-structure-dialog/event-structure-dialog.component';
+import { SeriesConfigDialogComponent, SeriesConfigResult } from '../../events/series-config-dialog/series-config-dialog.component';
+import { Series } from '../../../shared/models/series.model';
+import { SeriesStore } from '../../../shared/state/series-store.service';
 
 type SortCol = 'name' | 'date' | 'lastEdited';
 type SortDir = 'asc' | 'desc';
@@ -18,6 +24,7 @@ type SortDir = 'asc' | 'desc';
     FormsModule,
     MatIconModule,
     MatMenuModule,
+    MatDialogModule,
     TicketProgressBarComponent,
     SalesChartComponent,
   ],
@@ -25,7 +32,38 @@ type SortDir = 'asc' | 'desc';
   styleUrl: './programme-list.component.scss',
 })
 export class ProgrammeListComponent {
+  private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
+  private readonly store = inject(SeriesStore);
+
   readonly events = signal<ProgrammeEvent[]>(MOCK_PROGRAMME);
+
+  /** Topbar "Create" — same Event-or-Series picker used app-wide. */
+  openCreateDialog() {
+    const ref = this.dialog.open(EventStructureDialogComponent, {
+      width: '720px', maxWidth: '95vw', panelClass: 'event-structure-dialog',
+    });
+    ref.afterClosed().subscribe((choice: EventStructureChoice | undefined) => {
+      if (choice === 'single') this.router.navigate(['/events/create']);
+      else if (choice === 'series') this.createSeries();
+    });
+  }
+
+  private createSeries() {
+    const ref = this.dialog.open(SeriesConfigDialogComponent, {
+      width: '760px', maxWidth: '96vw', maxHeight: '92vh', panelClass: 'series-config-dialog-panel',
+    });
+    ref.afterClosed().subscribe((result: SeriesConfigResult | undefined) => {
+      if (!result) return;
+      const id = this.store.nextId();
+      const newSeries: Series = {
+        ...result, id, name: result.name ?? 'Untitled series',
+        status: 'Draft', eventCount: 0, eventIds: [],
+      };
+      this.store.upsert(newSeries);
+      this.router.navigate(['/events/series', id]);
+    });
+  }
 
   searchQuery = '';
   filterDate = '2025-08-17';

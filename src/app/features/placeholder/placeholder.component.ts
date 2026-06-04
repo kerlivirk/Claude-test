@@ -9,12 +9,12 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [RouterLink, MatButtonModule, MatIconModule],
   template: `
     <div class="ph">
-      <mat-icon>construction</mat-icon>
+      <mat-icon>Cog 1</mat-icon>
       <h1>{{ title }}</h1>
-      <p>This area is on the roadmap. Phase 1 ships single events &amp; series first.</p>
+      <p>This area is on the roadmap. Phase 1 ships series &amp; events first.</p>
       <a mat-flat-button color="primary" routerLink="/events">
-        <mat-icon>arrow_back</mat-icon>
-        Go to Single Events &amp; Series
+        <mat-icon>Tailless Line Arrow Left 1</mat-icon>
+        Go to Series &amp; Events
       </a>
     </div>
   `,

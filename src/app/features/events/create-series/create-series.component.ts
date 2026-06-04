@@ -15,6 +15,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { PlgTableDirective } from '@piletilevi/common-angular';
 
 import { Series, MOCK_SERIES } from '../../../shared/models/series.model';
 import { Event, MOCK_EVENTS } from '../../../shared/models/event.model';
@@ -40,6 +41,7 @@ const LEGAL_ENTITIES = ['PLG Estonia', 'PLG Latvia', 'PLG Lithuania', 'Kumu Art 
     MatInputModule, MatSelectModule, MatTableModule,
     MatMenuModule, MatTooltipModule, MatDividerModule,
     MatChipsModule, MatSnackBarModule, MatDialogModule,
+    PlgTableDirective,
   ],
   templateUrl: './create-series.component.html',
   styleUrl: './create-series.component.scss',

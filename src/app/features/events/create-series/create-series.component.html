@@ -3,17 +3,17 @@
   <header class="cs-topbar">
     <div class="cs-topbar-left">
       <button mat-icon-button (click)="cancel()" matTooltip="Back to events">
-        <mat-icon>arrow_back</mat-icon>
+        <mat-icon>Tailless Line Arrow Left 1</mat-icon>
       </button>
       <div>
-        <p class="cs-breadcrumb">Single Events &amp; Series / {{ isEdit() ? 'Edit series' : 'Create series' }}</p>
+        <p class="cs-breadcrumb">Series &amp; Events / {{ isEdit() ? 'Edit series' : 'Create series' }}</p>
         <h1 class="cs-title">{{ isEdit() ? (names()['Universal'] || 'Untitled series') : 'Create new series' }}</h1>
       </div>
     </div>
     <div class="cs-topbar-actions">
       <button mat-stroked-button (click)="cancel()">Cancel</button>
       <button mat-flat-button color="primary" (click)="save()" [disabled]="!canSave()">
-        <mat-icon>check</mat-icon>
+        <mat-icon>Check</mat-icon>
         {{ isEdit() ? 'Save changes' : 'Create series' }}
       </button>
     </div>
@@ -65,7 +65,7 @@
             <mat-hint>URL: /series/{{ slug() || 'your-series' }}</mat-hint>
           </mat-form-field>
           <button mat-stroked-button class="auto-slug" (click)="toggleAutoSlug()">
-            <mat-icon>{{ autoSlug() ? 'lock' : 'lock_open' }}</mat-icon>
+            <mat-icon>{{ autoSlug() ? 'House Key Access' : 'House Key Access' }}</mat-icon>
             {{ autoSlug() ? 'Auto from name' : 'Manual edit' }}
           </button>
         </div>
@@ -93,13 +93,13 @@
             <p>{{ events().length }} event{{ events().length === 1 ? '' : 's' }} · The main event is featured at checkout.</p>
           </div>
           <button mat-flat-button color="primary" (click)="openAddEvent()">
-            <mat-icon>add</mat-icon>
+            <mat-icon>Add 1</mat-icon>
             Add event
           </button>
         </div>
 
         @if (events().length > 0) {
-          <table mat-table [dataSource]="events()" class="cs-events-table">
+          <table mat-table plgTable [dataSource]="events()" class="cs-events-table">
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Event</th>
               <td mat-cell *matCellDef="let e">
@@ -127,7 +127,7 @@
               <td mat-cell *matCellDef="let e">
                 <button mat-icon-button (click)="setMain(e.id)" [matTooltip]="mainEventId() === e.id ? 'Main event' : 'Set as main event'">
                   <mat-icon [class.is-main]="mainEventId() === e.id">
-                    {{ mainEventId() === e.id ? 'star' : 'star_border' }}
+                    {{ mainEventId() === e.id ? 'Star 1' : 'Star 1' }}
                   </mat-icon>
                 </button>
               </td>
@@ -137,10 +137,10 @@
               <th mat-header-cell *matHeaderCellDef class="cs-actions"></th>
               <td mat-cell *matCellDef="let e" class="cs-actions">
                 <button mat-icon-button (click)="openAddEvent(e)" matTooltip="Edit">
-                  <mat-icon>edit</mat-icon>
+                  <mat-icon>Pencil</mat-icon>
                 </button>
                 <button mat-icon-button (click)="removeEvent(e.id)" matTooltip="Remove">
-                  <mat-icon>delete_outline</mat-icon>
+                  <mat-icon>Trash</mat-icon>
                 </button>
               </td>
             </ng-container>
@@ -150,11 +150,11 @@
           </table>
         } @else {
           <div class="cs-empty">
-            <mat-icon>event_note</mat-icon>
+            <mat-icon>Calendar Check</mat-icon>
             <h3>No events yet</h3>
             <p>Add the first event so this series has something to sell.</p>
             <button mat-flat-button color="primary" (click)="openAddEvent()">
-              <mat-icon>add</mat-icon>
+              <mat-icon>Add 1</mat-icon>
               Add first event
             </button>
           </div>

@@ -245,3 +245,11 @@
   .auto-slug { height: 40px; align-self: flex-start; }
   .cs-events-header { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
+
+@media (max-width: 600px) {
+  .cs-topbar { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 16px; }
+  .cs-title { white-space: normal; max-width: none; }
+  .cs-topbar-actions { flex-wrap: wrap; }
+  .cs-topbar-actions button { flex: 1; }
+  .cs-body { padding: 16px; }
+}

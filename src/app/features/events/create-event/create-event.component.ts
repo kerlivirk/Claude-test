@@ -1,540 +1,595 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, Signal, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { ShareDialogComponent, ShareOrganizer, ShareResult } from './share-dialog.component';
+
+import { Event, MOCK_EVENTS } from '../../../shared/models/event.model';
+import { Series } from '../../../shared/models/series.model';
+import { SeriesStore } from '../../../shared/state/series-store.service';
+import { TicketsStepComponent } from './tickets-step.component';
+import { SearchSelectComponent } from '../../../shared/components/search-select/search-select.component';
+import { CATEGORY_OPTIONS, GENRE_OPTIONS } from '../../../shared/models/taxonomy';
+import { LineupSlot, LineupRole } from '../../../shared/models/artists';
+import { AddArtistDialogComponent, AddArtistResult } from './add-artist-dialog.component';
+import { ArtistDialogComponent } from './artist-dialog.component';
+import { SyncConfirmDialogComponent } from './sync-confirm-dialog.component';
+import { TranslationsFieldComponent, TransField, TransLanguage, TransValues } from '../../../shared/components/translations-field/translations-field.component';
+
+type SyncKey = 'name' | 'important' | 'description' | 'additional' | 'category' | 'lineup' | 'internal';
+
+type DetailSectionKey =
+  | 'name' | 'cover' | 'slug' | 'date' | 'text' | 'category' | 'lineup' | 'internal';
+type StepMode = 'details' | 'tickets' | 'extras' | 'summary';
+
+interface DetailSection { key: DetailSectionKey; label: string; icon: string; }
+interface TextBlock { key: string; label: string; helpText?: string; }
 
 @Component({
   selector: 'app-create-event',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterLink,
-    FormsModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatStepperModule,
-    MatTabsModule,
-    MatExpansionModule,
-    MatChipsModule,
-    MatSnackBarModule,
+    CommonModule, FormsModule,
+    MatIconModule, MatMenuModule, MatTooltipModule, MatSnackBarModule,
+    TicketsStepComponent, SearchSelectComponent, TranslationsFieldComponent,
   ],
-  template: `
-    <!-- Header -->
-    <div class="create-header">
-      <button mat-icon-button [routerLink]="['/events']">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <div>
-        <h1 class="create-title">Create Event</h1>
-        <p class="create-subtitle">Fill in the details to create a new event</p>
-      </div>
-      <div class="header-actions">
-        <button mat-stroked-button [routerLink]="['/events']">Cancel</button>
-        <button mat-flat-button class="save-btn" (click)="save()">
-          <mat-icon>check</mat-icon>
-          Save Event
-        </button>
-      </div>
-    </div>
-
-    <!-- Stepper -->
-    <mat-stepper orientation="horizontal" [linear]="false" class="stepper">
-
-      <!-- Step 1: Basic Info -->
-      <mat-step label="Event Details">
-        <div class="step-content">
-
-          <!-- Event Name -->
-          <div class="form-section">
-            <h2 class="section-title">Event Name</h2>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Event Name</mat-label>
-              <input matInput placeholder="e.g., Rita Ray Concert" [(ngModel)]="form.name" />
-              <mat-hint>This will be the public name of your event</mat-hint>
-            </mat-form-field>
-          </div>
-
-          <!-- Date & Time -->
-          <div class="form-section">
-            <h2 class="section-title">Date & Time</h2>
-            <div class="grid-2">
-              <mat-form-field appearance="outline">
-                <mat-label>Start Date</mat-label>
-                <input matInput type="date" [(ngModel)]="form.startDate" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Start Time</mat-label>
-                <input matInput type="time" [(ngModel)]="form.startTime" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>End Date</mat-label>
-                <input matInput type="date" [(ngModel)]="form.endDate" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>End Time</mat-label>
-                <input matInput type="time" [(ngModel)]="form.endTime" />
-              </mat-form-field>
-            </div>
-            <mat-form-field appearance="outline">
-              <mat-label>Doors Open Time</mat-label>
-              <input matInput type="time" [(ngModel)]="form.doorsOpen" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Timezone</mat-label>
-              <mat-select [(ngModel)]="form.timezone">
-                @for (tz of timezones; track tz) {
-                  <mat-option [value]="tz">{{ tz }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          </div>
-
-          <!-- Location -->
-          <div class="form-section">
-            <h2 class="section-title">Location</h2>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Venue Name</mat-label>
-              <input matInput placeholder="e.g., Tallinn Arena" [(ngModel)]="form.venue" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Address</mat-label>
-              <input matInput placeholder="Street address" [(ngModel)]="form.address" />
-            </mat-form-field>
-            <div class="grid-2">
-              <mat-form-field appearance="outline">
-                <mat-label>City</mat-label>
-                <input matInput placeholder="City" [(ngModel)]="form.city" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Country</mat-label>
-                <input matInput placeholder="Country" [(ngModel)]="form.country" />
-              </mat-form-field>
-            </div>
-          </div>
-
-          <!-- Description -->
-          <div class="form-section">
-            <h2 class="section-title">Description</h2>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Event Description</mat-label>
-              <textarea
-                matInput
-                rows="6"
-                placeholder="Describe your event..."
-                [(ngModel)]="form.description"
-              ></textarea>
-            </mat-form-field>
-          </div>
-
-          <!-- Category -->
-          <div class="form-section">
-            <h2 class="section-title">Category</h2>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Category</mat-label>
-              <mat-select [(ngModel)]="form.category">
-                @for (cat of categories; track cat) {
-                  <mat-option [value]="cat">{{ cat }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          </div>
-
-          <div class="step-actions">
-            <button mat-flat-button matStepperNext class="save-btn">
-              Next: Tickets
-              <mat-icon>arrow_forward</mat-icon>
-            </button>
-          </div>
-        </div>
-      </mat-step>
-
-      <!-- Step 2: Tickets -->
-      <mat-step label="Price Categories & Places">
-        <div class="step-content">
-          <div class="form-section">
-            <h2 class="section-title">Ticket Sales Source</h2>
-            <div class="source-options">
-              @for (source of salesSources; track source.value) {
-                <button
-                  class="source-option"
-                  [class.active]="form.salesSource === source.value"
-                  (click)="form.salesSource = source.value"
-                >
-                  <mat-icon>{{ source.icon }}</mat-icon>
-                  <span>{{ source.label }}</span>
-                </button>
-              }
-            </div>
-          </div>
-
-          <!-- Ticket types -->
-          <div class="form-section">
-            <div class="section-header">
-              <h2 class="section-title">Price Categories</h2>
-              <button mat-stroked-button (click)="addTicketType()">
-                <mat-icon>add</mat-icon> Add category
-              </button>
-            </div>
-
-            @for (tt of form.ticketTypes; track tt.id; let i = $index) {
-              <mat-expansion-panel class="ticket-panel">
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    {{ tt.name || 'Price Category ' + (i + 1) }}
-                  </mat-panel-title>
-                  <mat-panel-description>
-                    {{ tt.price ? '€' + tt.price : 'No price set' }} · {{ tt.quantity || 0 }} tickets
-                  </mat-panel-description>
-                </mat-expansion-panel-header>
-
-                <div class="ticket-type-form">
-                  <div class="grid-2">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Internal Name</mat-label>
-                      <input matInput [(ngModel)]="tt.name" placeholder="e.g., Early Bird" />
-                    </mat-form-field>
-                    <mat-form-field appearance="outline">
-                      <mat-label>Display Name</mat-label>
-                      <input matInput [(ngModel)]="tt.displayName" placeholder="Shown to customers" />
-                    </mat-form-field>
-                  </div>
-                  <div class="grid-2">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Price (€)</mat-label>
-                      <input matInput type="number" [(ngModel)]="tt.price" placeholder="0.00" />
-                    </mat-form-field>
-                    <mat-form-field appearance="outline">
-                      <mat-label>Quantity</mat-label>
-                      <input matInput type="number" [(ngModel)]="tt.quantity" placeholder="e.g., 500" />
-                    </mat-form-field>
-                  </div>
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Description</mat-label>
-                    <input matInput [(ngModel)]="tt.description" placeholder="Optional description" />
-                  </mat-form-field>
-                  <button mat-button color="warn" (click)="removeTicketType(i)">
-                    <mat-icon>delete</mat-icon> Remove
-                  </button>
-                </div>
-              </mat-expansion-panel>
-            }
-          </div>
-
-          <div class="step-actions">
-            <button mat-stroked-button matStepperPrevious>
-              <mat-icon>arrow_back</mat-icon> Back
-            </button>
-            <button mat-flat-button matStepperNext class="save-btn">
-              Next: Settings
-              <mat-icon>arrow_forward</mat-icon>
-            </button>
-          </div>
-        </div>
-      </mat-step>
-
-      <!-- Step 3: Status & Save -->
-      <mat-step label="Settings & Save">
-        <div class="step-content">
-          <div class="form-section">
-            <h2 class="section-title">Event Status</h2>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Status</mat-label>
-              <mat-select [(ngModel)]="form.status">
-                <mat-option value="Draft">Draft</mat-option>
-                <mat-option value="Active">Active</mat-option>
-                <mat-option value="Scheduled">Scheduled</mat-option>
-                <mat-option value="Hidden">Hidden</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-
-          <!-- Summary -->
-          <div class="summary-card">
-            <h3>Summary</h3>
-            <div class="summary-row">
-              <span>Name</span><span>{{ form.name || '—' }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Date</span><span>{{ form.startDate || '—' }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Venue</span><span>{{ form.venue || '—' }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Status</span><span>{{ form.status }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Price categories</span><span>{{ form.ticketTypes.length }}</span>
-            </div>
-          </div>
-
-          <div class="step-actions">
-            <button mat-stroked-button matStepperPrevious>
-              <mat-icon>arrow_back</mat-icon> Back
-            </button>
-            <button mat-flat-button class="save-btn" (click)="save()">
-              <mat-icon>check</mat-icon> Save Event
-            </button>
-          </div>
-        </div>
-      </mat-step>
-
-    </mat-stepper>
-  `,
-  styles: [`
-    :host {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background: var(--bg-subtle, #f8f8fa);
-      font-family: Mulish, sans-serif;
-    }
-
-    .create-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: #fff;
-      padding: 0.75rem 1.5rem;
-      border-bottom: 1px solid var(--stroke-default, #e9e7ed);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      margin: 0;
-      border-radius: 0;
-    }
-
-    .create-title {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--text-primary, #11002b);
-      margin: 0;
-      line-height: 1.2;
-    }
-
-    .create-subtitle {
-      font-size: 0.75rem;
-      color: var(--text-muted, #84738f);
-      margin: 2px 0 0;
-      letter-spacing: .2px;
-      text-transform: uppercase;
-    }
-
-    .header-actions {
-      margin-left: auto;
-      display: flex;
-      gap: 0.75rem;
-    }
-
-    .save-btn {
-      background-color: var(--brand-secondary, #06d373) !important;
-      color: var(--brand-primary, #11002b) !important;
-      font-weight: 600 !important;
-    }
-
-    /* Stepper */
-    .stepper {
-      flex: 1;
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      overflow: visible;
-      padding: 24px;
-      max-width: 1080px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .step-content {
-      padding: 1.5rem 0;
-      max-width: 720px;
-      margin: 0 auto;
-    }
-
-    .form-section {
-      background: var(--bg-surface, #fff);
-      border: 1px solid var(--stroke-on-surface-primary, #e9e7ed);
-      border-radius: var(--radius-lg, 0.75rem);
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .section-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text-on-surface-primary, #11002b);
-      margin: 0 0 1rem;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    .full-width { width: 100%; }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    /* Source options */
-    .source-options {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-    }
-
-    .source-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 1rem;
-      border: 2px solid var(--stroke-on-surface-primary, #e9e7ed);
-      border-radius: var(--radius-md, 0.5rem);
-      background: var(--bg-surface, #fff);
-      cursor: pointer;
-      transition: all 0.15s;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-on-surface-primary, #11002b);
-
-      &:hover { border-color: var(--gray-400, #c1bacb); }
-      &.active {
-        border-color: var(--base-black, #11002b);
-        background: var(--base-black, #11002b);
-        color: #fff;
-      }
-    }
-
-    /* Ticket type panels */
-    .ticket-panel {
-      margin-bottom: 0.75rem;
-      border: 1px solid var(--stroke-on-surface-primary, #e9e7ed) !important;
-      border-radius: var(--radius-md, 0.5rem) !important;
-    }
-
-    .ticket-type-form {
-      padding-top: 1rem;
-    }
-
-    /* Summary */
-    .summary-card {
-      background: var(--gray-50, #f8f8fa);
-      border: 1px solid var(--stroke-on-surface-primary, #e9e7ed);
-      border-radius: var(--radius-lg, 0.75rem);
-      padding: 1.25rem;
-      margin: 1rem 0;
-
-      h3 {
-        font-size: 0.875rem;
-        font-weight: 700;
-        color: var(--text-on-surface-primary, #11002b);
-        margin: 0 0 0.75rem;
-      }
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.375rem 0;
-      font-size: 0.875rem;
-      border-bottom: 1px solid var(--stroke-on-surface-primary, #e9e7ed);
-
-      &:last-child { border-bottom: none; }
-
-      span:first-child { color: var(--text-on-surface-secondary, #5a5062); }
-      span:last-child { font-weight: 500; color: var(--text-on-surface-primary, #11002b); }
-    }
-
-    .step-actions {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
-    }
-  `]
+  // ArtistDialogComponent / AddArtistDialogComponent are opened via MatDialog (no template ref needed)
+  templateUrl: './create-event.html',
+  styleUrl: './create-event.scss',
 })
-export class CreateEventComponent {
+export class CreateEventComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private snack = inject(MatSnackBar);
+  private store = inject(SeriesStore);
+  private dialog = inject(MatDialog);
+
+  readonly shareOrganizers: ShareOrganizer[] = [
+    { id: 'o1', name: 'Maria Tamm', email: 'maria.tamm@piletilevi.ee' },
+    { id: 'o2', name: 'Jaan Kask', email: 'jaan.kask@piletilevi.ee' },
+    { id: 'o3', name: 'Liis Saar', email: 'liis.saar@piletilevi.ee' },
+    { id: 'o4', name: 'Kumu Art Museum', email: 'events@kumu.ee' },
+    { id: 'o5', name: 'Tartu Theater', email: 'box@tartuteater.ee' },
+  ];
+
+  readonly categoryOptions = CATEGORY_OPTIONS;
+  readonly genreOptions = GENRE_OPTIONS;
+
+  readonly detailSections: DetailSection[] = [
+    { key: 'name', label: 'Event Name', icon: 'Text Style' },
+    { key: 'cover', label: 'Cover Image', icon: 'Image' },
+    { key: 'slug', label: 'Slug', icon: 'Link Chain' },
+    { key: 'date', label: 'Date & Venue', icon: 'Location Pin 1' },
+    { key: 'text', label: 'Text blocks', icon: 'Text File' },
+    { key: 'category', label: 'Category', icon: 'Dashboard Square' },
+    { key: 'lineup', label: 'Lineup', icon: 'User Group' },
+    { key: 'internal', label: 'Internal Information', icon: 'Chat Bubble Text Oval' },
+  ];
+
+  readonly textBlocks: TextBlock[] = [
+    { key: 'important', label: 'Important Information', helpText: 'Shown directly under the event name on the public ticket page.' },
+    { key: 'description', label: 'Event Description' },
+  ];
+
+  readonly internalBlocks: TextBlock[] = [
+    { key: 'cashier', label: 'Cashier Instructions' },
+    { key: 'pos', label: 'POS Notes' },
+  ];
+
+  activeGroup = signal<'details' | 'tickets' | null>('details');
+  activeSection = signal<DetailSectionKey | 'tickets' | 'extras' | 'summary'>('name');
+
+  readonly ticketSections = [
+    { key: 'tk-source', label: 'Sales source', icon: 'Ticket' },
+    { key: 'tk-sale', label: 'Sale period', icon: 'Circle Clock' },
+    { key: 'tk-categories', label: 'Price categories', icon: 'Tag' },
+    { key: 'tk-places', label: 'Places', icon: 'Location Pin 1' },
+    { key: 'tk-rules', label: 'Ticket rules', icon: 'Cog 1' },
+  ];
+
+  /* Mobile: the section nav (table of contents) opens as a drawer */
+  sidebarOpen = signal(false);
+  toggleSidebar() { this.sidebarOpen.update(v => !v); }
+  closeSidebar() { this.sidebarOpen.set(false); }
+  selectStep(s: 'tickets' | 'extras' | 'summary') {
+    this.activeSection.set(s);
+    this.sidebarOpen.set(false);
+  }
+  scrollToTicket(anchor: string) {
+    this.activeSection.set('tickets');
+    this.sidebarOpen.set(false);
+    setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  }
+
+  private readonly detailKeys: string[] = ['name', 'cover', 'slug', 'date', 'text', 'category', 'lineup', 'internal'];
+  mode = computed<StepMode>(() => {
+    const s = this.activeSection();
+    return this.detailKeys.includes(s) ? 'details' : (s as StepMode);
+  });
+
+  eventId = signal<string>('');
+  seriesIdHint = signal<string>('');
+  /** The resolved parent series. Returns `undefined` for hidden (system)
+   *  wrappers so the UI still renders "Standalone event" — the user never
+   *  knows the wrapping series exists, matching backend behaviour. */
+  parentSeries: Signal<Series | undefined> = computed(() => {
+    const hint = this.seriesIdHint();
+    const found = hint ? this.store.getById(hint)() : this.store.getForEvent(this.eventId())();
+    return found?.hidden ? undefined : found;
+  });
+
+  /** All series available for the connect-to-series picker — visible only.
+   *  Hidden wrappers must never appear as a target. */
+  allSeries = computed(() => this.store.visible());
+
+  /** Connect this draft event to a visible series. Backend invariant: the
+   *  hidden wrapper that previously held the event is garbage-collected. */
+  connectToSeries(id: string) {
+    if (!id) return;
+    this.store.attachEventToSeries(this.eventId(), id);
+    this.seriesIdHint.set(id);
+  }
+  /** Disconnect from the current series. Backend invariant: the event still
+   *  belongs to a series — we create a fresh hidden wrapper for it. */
+  disconnectFromSeries() {
+    this.store.detachEventFromSeries(this.eventId());
+    this.seriesIdHint.set('');
+  }
+
+  /* Local (per-event) overrides — used when sync is OFF */
+  localName = signal<string>('50 Landmark Tracks in the History of Polish Hip-Hop - Performed by O.S.T.R.');
+  localImportant = signal<string>('');
+  localDescription = signal<string>('');
+  localAdditional = signal<string>('');
+  localCashier = signal<string>('');
+  localPos = signal<string>('');
+  localCategory = signal<string>('');
+  localTags = signal<string>('');
+
+  eventDate = signal<string>('2026-04-18');
+  venue = signal<string>('Tartu Theater');
+  slug = signal<string>('summer-concert-event-new');
+  autoSlug = signal(true);
+
+  /* Cover image — data URL (prototype). In prod this would upload to a CDN
+     and the signal would hold the public URL instead. */
+  coverImageUrl = signal<string>('');
+  coverFileName = signal<string>('');
+  coverError = signal<string>('');
+  private readonly COVER_MAX_BYTES = 5 * 1024 * 1024;
+
+  onCoverFileSelected(event: globalThis.Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.coverError.set('');
+    if (!file.type.startsWith('image/')) {
+      this.coverError.set('Please choose an image file.');
+      input.value = '';
+      return;
+    }
+    if (file.size > this.COVER_MAX_BYTES) {
+      this.coverError.set('Image must be 5 MB or smaller.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.coverImageUrl.set(String(reader.result ?? ''));
+      this.coverFileName.set(file.name);
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  removeCover() {
+    this.coverImageUrl.set('');
+    this.coverFileName.set('');
+    this.coverError.set('');
+  }
+
+  /* Date & Venue — interactive fields */
   readonly timezones = [
-    'Europe/Tallinn', 'Europe/Riga', 'Europe/Vilnius',
-    'Europe/Helsinki', 'Europe/Warsaw', 'Europe/Berlin', 'Europe/London'
+    'Europe / Tallinn (EET, UTC+3)',
+    'Europe / Riga (EET, UTC+3)',
+    'Europe / Vilnius (EET, UTC+3)',
+    'Europe / Helsinki (EET, UTC+3)',
   ];
+  timezone = signal(this.timezones[0]);
+  startDate = signal('2026-04-18');
+  startTime = signal('19:00');
+  endDate = signal('2026-04-18');
+  endTime = signal('23:00');
+  doorsTime = signal('18:00');
 
-  readonly categories = [
-    'Music', 'Theatre', 'Dance', 'Sport', 'Comedy', 'Art',
-    'Film', 'Festival', 'Conference', 'Family', 'Other'
-  ];
+  onSlugInput(v: string) { this.autoSlug.set(false); this.slug.set(v); }
 
-  readonly salesSources = [
-    { value: 'biletomat', label: 'Biletomat.com', icon: 'confirmation_number' },
-    { value: 'external', label: 'External', icon: 'open_in_new' },
-    { value: 'info-only', label: 'Info only', icon: 'info' },
-  ];
+  private slugify(s: string) {
+    return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
 
-  form = {
-    name: '',
-    startDate: '',
-    startTime: '',
-    endDate: '',
-    endTime: '',
-    doorsOpen: '',
-    timezone: 'Europe/Tallinn',
-    venue: '',
-    address: '',
-    city: '',
-    country: '',
-    description: '',
-    category: '',
-    status: 'Draft',
-    salesSource: 'biletomat',
-    ticketTypes: [] as Array<{
-      id: string; name: string; displayName: string;
-      price: string; quantity: string; description: string;
-    }>,
+  toggleAutoSlug() {
+    this.autoSlug.update(v => !v);
+    if (this.autoSlug()) this.slug.set(this.slugify(this.eventName()));
+  }
+
+  syncName = signal(true);
+  syncImportant = signal(true);
+  syncDescription = signal(true);
+  syncAdditional = signal(true);
+  syncCategory = signal(true);
+  syncLineup = signal(true);
+  syncInternal = signal(true);
+
+  /* Locked = sync toggle on AND this event belongs to a series.
+     When locked, the field mirrors the series value (even if empty) and is read-only. */
+  isSyncedName = computed(() => this.syncName() && !!this.parentSeries());
+  isSyncedImportant = computed(() => this.syncImportant() && !!this.parentSeries());
+  isSyncedDescription = computed(() => this.syncDescription() && !!this.parentSeries());
+  isSyncedAdditional = computed(() => this.syncAdditional() && !!this.parentSeries());
+  isSyncedCashier = computed(() => this.syncInternal() && !!this.parentSeries());
+  isSyncedPos = computed(() => this.syncInternal() && !!this.parentSeries());
+  isSyncedCategory = computed(() => this.syncCategory() && !!this.parentSeries());
+  isSyncedLineup = computed(() => this.syncLineup() && !!this.parentSeries());
+
+  /* Map each sync key to its signal + a human label for the confirm dialog */
+  private syncSignalFor(key: SyncKey) {
+    switch (key) {
+      case 'name': return this.syncName;
+      case 'important': return this.syncImportant;
+      case 'description': return this.syncDescription;
+      case 'additional': return this.syncAdditional;
+      case 'category': return this.syncCategory;
+      case 'lineup': return this.syncLineup;
+      case 'internal': return this.syncInternal;
+    }
+  }
+  private readonly syncLabels: Record<SyncKey, string> = {
+    name: 'Event Name',
+    important: 'Important Information',
+    description: 'Event Description',
+    additional: 'Additional Description',
+    category: 'Category & Tags',
+    lineup: 'Lineup',
+    internal: 'Internal Information',
   };
 
-  constructor(private snackBar: MatSnackBar) {}
-
-  addTicketType(): void {
-    this.form.ticketTypes.push({
-      id: Date.now().toString(),
-      name: '', displayName: '', price: '', quantity: '', description: ''
+  /** Open the confirm dialog, then flip the sync flag only if the user confirms. */
+  requestSyncToggle(key: SyncKey) {
+    const sig = this.syncSignalFor(key);
+    const turningOn = !sig();
+    const ref = this.dialog.open(SyncConfirmDialogComponent, {
+      width: '420px', maxWidth: '96vw', panelClass: 'series-config-dialog-panel',
+      data: { fieldLabel: this.syncLabels[key], turningOn },
+    });
+    ref.afterClosed().subscribe((ok: boolean | undefined) => {
+      if (ok) sig.set(turningOn);
     });
   }
 
-  removeTicketType(index: number): void {
-    this.form.ticketTypes.splice(index, 1);
+  /* Displayed values: series value when synced, else the local override */
+  eventName = computed(() => this.isSyncedName() ? (this.parentSeries()?.name ?? '') : this.localName());
+  importantInfo = computed(() => this.isSyncedImportant() ? (this.parentSeries()?.importantInfo ?? '') : this.localImportant());
+  description = computed(() => this.isSyncedDescription() ? (this.parentSeries()?.description ?? '') : this.localDescription());
+  additionalDesc = computed(() => this.isSyncedAdditional() ? (this.parentSeries()?.additionalDesc ?? '') : this.localAdditional());
+  cashierInfo = computed(() => this.isSyncedCashier() ? (this.parentSeries()?.cashierInstructions ?? '') : this.localCashier());
+  posInfo = computed(() => this.isSyncedPos() ? (this.parentSeries()?.posNotes ?? '') : this.localPos());
+  category = computed(() => this.isSyncedCategory() ? (this.parentSeries()?.category ?? '') : this.localCategory());
+  tags = computed(() => this.isSyncedCategory() ? (this.parentSeries()?.genre ?? '') : this.localTags());
+
+  syncedTextKey(key: string) {
+    if (key === 'important') return this.isSyncedImportant();
+    if (key === 'description') return this.isSyncedDescription();
+    if (key === 'additional') return this.isSyncedAdditional();
+    return false;
+  }
+  syncTextFlag(key: string): boolean {
+    if (key === 'important') return this.syncImportant();
+    if (key === 'description') return this.syncDescription();
+    if (key === 'additional') return this.syncAdditional();
+    return false;
+  }
+  syncedInternalKey(key: string) {
+    if (key === 'cashier') return this.isSyncedCashier();
+    if (key === 'pos') return this.isSyncedPos();
+    return false;
+  }
+  internalBlockValue(key: string): string {
+    if (key === 'cashier') return this.cashierInfo();
+    if (key === 'pos') return this.posInfo();
+    return '';
+  }
+  onInternalBlockInput(key: string, v: string) {
+    if (key === 'cashier') this.localCashier.set(v);
+    else if (key === 'pos') this.localPos.set(v);
   }
 
-  save(): void {
-    this.snackBar.open('Event saved successfully!', '✓', {
-      duration: 3000,
-      panelClass: ['snack-success']
+  /* Lineup slots (role / time / members) */
+  lineup = signal<LineupSlot[]>([
+    {
+      id: 'sl1', name: 'Arctic Monkeys', avatar: 'linear-gradient(135deg, #7f56d9, #4b39a4)',
+      role: 'opener', time: '19:00',
+      members: [
+        { id: 'm1', name: 'Alex Turner', role: 'Vocals' },
+        { id: 'm2', name: 'Matt Helders', role: 'Drums' },
+        { id: 'm3', name: 'Jamie Cook', role: 'Guitar' },
+      ],
+    },
+    {
+      id: 'sl2', name: 'In Flames', avatar: 'linear-gradient(135deg, #f59e0b, #b45309)',
+      role: 'opener', time: '20:00',
+      members: [
+        { id: 'm4', name: 'Anders Fridén', role: 'Vocals' },
+        { id: 'm5', name: 'Björn Gelotte', role: 'Guitar' },
+        { id: 'm6', name: 'Tanner Wayne', role: 'Drums' },
+        { id: 'm7', name: 'Bryce Paul', role: 'Bass' },
+      ],
+    },
+    {
+      id: 'sl3', name: 'Rammstein', avatar: 'linear-gradient(135deg, #ef4444, #991b1b)',
+      role: 'headliner', time: '21:00',
+      members: [
+        { id: 'm8', name: 'Till Lindemann', role: 'Vocalist' },
+        { id: 'm9', name: 'Richard Z. Kruspe', role: 'Guitarist' },
+        { id: 'm10', name: 'Oliver Riedel', role: 'Bassist' },
+        { id: 'm11', name: 'Christoph Schneider', role: 'Drummer' },
+        { id: 'm12', name: 'Christian Lorenz', role: 'Keys' },
+        { id: 'm13', name: 'Paul Landers', role: 'Guitarist' },
+      ],
+    },
+  ]);
+
+  lineupSummary = computed(() => {
+    const list = this.lineup();
+    const h = list.filter(s => s.role === 'headliner').length;
+    return `${list.length} artist${list.length === 1 ? '' : 's'} · ${h} headliner`;
+  });
+  roleLabel(r: LineupRole) { return r.charAt(0).toUpperCase() + r.slice(1); }
+
+  constructor() {
+    /* When user turns sync OFF, fork the current series value into the local override
+       so the input keeps showing what they saw, ready for editing. */
+    effect(() => {
+      if (!this.syncName()) {
+        const seriesName = this.parentSeries()?.name;
+        if (seriesName && !this.localName()) this.localName.set(seriesName);
+      }
+    }, { allowSignalWrites: true });
+    effect(() => {
+      const s = this.parentSeries();
+      if (!this.syncImportant() && s?.importantInfo && !this.localImportant()) this.localImportant.set(s.importantInfo);
+      if (!this.syncDescription() && s?.description && !this.localDescription()) this.localDescription.set(s.description);
+      if (!this.syncAdditional() && s?.additionalDesc && !this.localAdditional()) this.localAdditional.set(s.additionalDesc);
+    }, { allowSignalWrites: true });
+    effect(() => {
+      if (!this.syncCategory()) {
+        const s = this.parentSeries();
+        if (s?.category && !this.localCategory()) this.localCategory.set(s.category);
+        if (s?.genre && !this.localTags()) this.localTags.set(s.genre);
+      }
+    }, { allowSignalWrites: true });
+    effect(() => {
+      if (!this.syncInternal()) {
+        const s = this.parentSeries();
+        if (s?.cashierInstructions && !this.localCashier()) this.localCashier.set(s.cashierInstructions);
+        if (s?.posNotes && !this.localPos()) this.localPos.set(s.posNotes);
+      }
+    }, { allowSignalWrites: true });
+    /* Keep the slug in sync with the event name while auto-generate is on. */
+    effect(() => {
+      const name = this.eventName();
+      if (this.autoSlug()) this.slug.set(this.slugify(name));
+    }, { allowSignalWrites: true });
+  }
+
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    const seriesIdParam = this.route.snapshot.queryParamMap.get('seriesId');
+
+    if (id) {
+      this.eventId.set(id);
+      const ev = MOCK_EVENTS.find(e => e.id === id);
+      if (ev) {
+        this.localName.set(ev.name);
+        this.eventDate.set(ev.date);
+        this.venue.set(ev.venue);
+        if (ev.formData?.slug) this.slug.set(ev.formData.slug);
+      }
+      // Edited event already has a series in the store (possibly hidden) —
+      // no init bookkeeping needed.
+    } else {
+      // Brand-new event. Assign a frontend draft id immediately so the
+      // backend invariant (event always lives inside a series) can be
+      // mirrored from the very first render.
+      const draftId = 'evt-draft-' + Date.now();
+      this.eventId.set(draftId);
+      if (seriesIdParam) {
+        // Created via /events/create?seriesId=… — attach to that visible series.
+        this.store.attachEventToSeries(draftId, seriesIdParam);
+        this.seriesIdHint.set(seriesIdParam);
+      } else {
+        // Truly standalone — wrap it in a hidden system series.
+        this.store.ensureHiddenSeriesFor(draftId);
+      }
+    }
+
+    // Deep link straight to a step, e.g. ?step=tickets from the event card "Tickets" button
+    if (this.route.snapshot.queryParamMap.get('step') === 'tickets') {
+      this.activeSection.set('tickets');
+      this.activeGroup.set('tickets');
+    }
+  }
+
+  /* Input handlers — only update locals; sync toggle decides what's displayed */
+  onNameInput(v: string) { this.localName.set(v); }
+  onImportantInput(v: string) { this.localImportant.set(v); }
+  onDescriptionInput(v: string) { this.localDescription.set(v); }
+  onAdditionalInput(v: string) { this.localAdditional.set(v); }
+  onCategoryInput(v: string) { this.localCategory.set(v); }
+  onTagsInput(v: string) { this.localTags.set(v); }
+
+  textBlockValue(key: string): string {
+    if (key === 'important') return this.importantInfo();
+    if (key === 'description') return this.description();
+    if (key === 'additional') return this.additionalDesc();
+    return '';
+  }
+  onTextBlockInput(key: string, v: string) {
+    if (key === 'important') this.onImportantInput(v);
+    else if (key === 'description') this.onDescriptionInput(v);
+    else if (key === 'additional') this.onAdditionalInput(v);
+  }
+
+  scrollTo(key: DetailSectionKey) {
+    this.activeSection.set(key);
+    this.sidebarOpen.set(false);
+    const el = document.getElementById('sec-' + key);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* Scroll-spy: highlight the nav sub-item for whichever detail section is in view */
+  onFormScroll(container: HTMLElement) {
+    if (this.mode() !== 'details') return;
+    const refTop = container.getBoundingClientRect().top + 96;
+    let current: DetailSectionKey = this.detailSections[0].key;
+    for (const s of this.detailSections) {
+      const el = document.getElementById('sec-' + s.key);
+      if (el && el.getBoundingClientRect().top <= refTop) current = s.key;
+    }
+    if (this.activeSection() !== current) {
+      this.activeSection.set(current);
+      document.querySelector('.ce-nav-sub-item.active')?.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  openAddArtist() {
+    const ref = this.dialog.open(AddArtistDialogComponent, {
+      width: '420px', maxWidth: '96vw', panelClass: 'series-config-dialog-panel',
+    });
+    ref.afterClosed().subscribe((res: AddArtistResult | undefined) => {
+      if (!res) return;
+      const slot: LineupSlot = {
+        id: 'sl' + Date.now(), name: res.name, avatar: res.avatar,
+        role: 'opener', time: '', members: [],
+      };
+      this.lineup.update(l => [...l, slot]);
+      this.openArtist(slot);
     });
   }
+
+  openArtist(slot: LineupSlot) {
+    const ref = this.dialog.open(ArtistDialogComponent, {
+      width: '440px', maxWidth: '96vw', maxHeight: '90vh', panelClass: 'series-config-dialog-panel',
+      data: { slot },
+    });
+    ref.afterClosed().subscribe((res: { action: 'save' | 'remove'; slot: LineupSlot } | undefined) => {
+      if (!res) return;
+      if (res.action === 'remove') {
+        this.lineup.update(l => l.filter(s => s.id !== slot.id));
+      } else {
+        this.lineup.update(l => l.map(s => s.id === res.slot.id ? res.slot : s));
+      }
+    });
+  }
+
+  formatDate(d?: string) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /* Translations (inline, side-by-side) */
+  readonly baseLang = 'en';
+  readonly languages: TransLanguage[] = [
+    { code: 'en', name: 'English' },
+    { code: 'et', name: 'Estonian' },
+    { code: 'lv', name: 'Latvian' },
+    { code: 'lt', name: 'Lithuanian' },
+    { code: 'ru', name: 'Russian' },
+    { code: 'fi', name: 'Finnish' },
+  ];
+  readonly nameFields: TransField[] = [{ key: 'name', label: 'Event Name', placeholder: 'New event' }];
+
+  /** translations for the name field, keyed by language (base lang is the event name itself) */
+  nameTrans = signal<TransValues>({});
+  nameValues = computed<TransValues>(() => ({ ...this.nameTrans(), [this.baseLang]: { name: this.eventName() } }));
+  onNameValuesChange(v: TransValues) {
+    if (!this.isSyncedName() && v[this.baseLang]?.['name'] !== undefined) {
+      this.localName.set(v[this.baseLang]['name']);
+    }
+    const rest: TransValues = { ...v };
+    delete rest[this.baseLang];
+    this.nameTrans.set(rest);
+  }
+
+  share() {
+    const ref = this.dialog.open(ShareDialogComponent, {
+      width: '460px',
+      maxWidth: '96vw',
+      panelClass: 'series-config-dialog-panel',
+      data: { eventName: this.eventName(), organizers: this.shareOrganizers },
+    });
+    ref.afterClosed().subscribe((result: ShareResult | undefined) => {
+      if (!result) return;
+      const n = result.organizerIds.length;
+      this.snack.open(`Shared with ${n} organizer${n === 1 ? '' : 's'} (${result.permission})`, 'OK', { duration: 2800 });
+    });
+  }
+
+  publish() { this.publishEvent(); }
+  saveDraft() { this.snack.open('Draft saved', 'OK', { duration: 2500 }); }
+
+  /* ---------- Step navigation (bottom bar) ---------- */
+  readonly stepOrder: StepMode[] = ['details', 'tickets', 'extras', 'summary'];
+  private readonly stepLabels: Record<StepMode, string> = {
+    details: 'Event Details', tickets: 'Tickets', extras: 'Extras', summary: 'Summary',
+  };
+  isFirstStep = computed(() => this.mode() === this.stepOrder[0]);
+  isLastStep = computed(() => this.mode() === this.stepOrder[this.stepOrder.length - 1]);
+
+  private goToStep(step: StepMode) {
+    if (step === 'details') { this.activeGroup.set('details'); this.activeSection.set('name'); }
+    else if (step === 'tickets') { this.activeGroup.set('tickets'); this.activeSection.set('tickets'); }
+    else { this.activeGroup.set(null); this.activeSection.set(step); }
+    this.sidebarOpen.set(false);
+    setTimeout(() => document.querySelector('.ce-form')?.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+  }
+
+  nextStep() {
+    const i = this.stepOrder.indexOf(this.mode());
+    if (i < 0 || i >= this.stepOrder.length - 1) return;
+    const next = this.stepOrder[i + 1];
+    this.goToStep(next);
+    this.snack.open(`Saved. Next: ${this.stepLabels[next]}`, 'OK', { duration: 1800 });
+  }
+
+  prevStep() {
+    const i = this.stepOrder.indexOf(this.mode());
+    if (i <= 0) { this.back(); return; }
+    this.goToStep(this.stepOrder[i - 1]);
+  }
+
+  /* ---------- Final actions ---------- */
+  publishEvent() {
+    this.snack.open('Event published 🎉', 'OK', { duration: 3000 });
+    this.router.navigate(this.exitTarget());
+  }
+  saveDraftAndExit() {
+    this.snack.open('Saved as draft', 'OK', { duration: 2500 });
+    this.router.navigate(this.exitTarget());
+  }
+
+  private exitTarget(): string[] {
+    const series = this.parentSeries();
+    return series ? ['/events/series', series.id] : ['/events'];
+  }
+
+  back() { this.router.navigate(this.exitTarget()); }
+  close() { this.router.navigate(this.exitTarget()); }
 }

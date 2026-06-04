@@ -4,7 +4,7 @@ import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
-export type EventStructureChoice = 'single' | 'series' | 'collection' | 'timeslot';
+export type EventStructureChoice = 'single' | 'series';
 
 interface ChoiceOption {
   id: EventStructureChoice;
@@ -25,7 +25,7 @@ interface ChoiceOption {
         <p class="dialog-subtitle">Pick a structure to start with</p>
       </div>
       <button mat-icon-button mat-dialog-close>
-        <mat-icon>close</mat-icon>
+        <mat-icon>Delete 1</mat-icon>
       </button>
     </div>
 
@@ -43,7 +43,7 @@ interface ChoiceOption {
               <p>{{ opt.description }}</p>
               <span class="choice-hint">{{ opt.hint }}</span>
             </div>
-            <mat-icon class="choice-check">{{ selected() === opt.id ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+            <mat-icon class="choice-check">{{ selected() === opt.id ? 'Circle Solid' : 'Circle' }}</mat-icon>
           </button>
         }
       </div>
@@ -55,7 +55,7 @@ interface ChoiceOption {
               [disabled]="!selected()"
               (click)="confirm()">
         Continue
-        <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+        <mat-icon iconPositionEnd>Tailless Line Arrow Right 1</mat-icon>
       </button>
     </mat-dialog-actions>
   `,
@@ -170,29 +170,15 @@ export class EventStructureDialogComponent {
       id: 'single',
       title: 'Single Event',
       description: 'A standalone event with one date and a single ticket allocation.',
-      icon: 'event',
+      icon: 'Blank Calendar',
       hint: 'Best for concerts, talks, screenings.',
     },
     {
       id: 'series',
       title: 'Series',
       description: 'Group multiple events under one umbrella with shared metadata.',
-      icon: 'layers',
+      icon: 'Layers 1',
       hint: 'Tours, festivals, recurring shows.',
-    },
-    {
-      id: 'collection',
-      title: 'Collection',
-      description: 'Curated grouping of events for promotion (no shared sales).',
-      icon: 'sell',
-      hint: 'Themed lineups, season highlights.',
-    },
-    {
-      id: 'timeslot',
-      title: 'Time-Slot Event',
-      description: 'One event with multiple time slots customers pick from.',
-      icon: 'schedule',
-      hint: 'Exhibitions, workshops, museum tours.',
     },
   ];
 

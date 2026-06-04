@@ -1,0 +1,342 @@
+:host {
+  display: block;
+  font-family: Mulish, sans-serif;
+  color: #11002b;
+
+  --ts-fg: #11002b;
+  --ts-fg-muted: #6d5f79;
+  --ts-stroke: #e9e7ed;
+  --ts-surface-soft: #f8f7f9;
+  --ts-surface-tint: #f4f2f5;
+  --ts-brand: #06d373;
+  --ts-purple: #7f56d9;
+  --ts-purple-soft: #f4ebff;
+}
+
+/* ===== Section card ===== */
+.ts-section {
+  background: #fff;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 14px;
+  padding: 20px 24px 24px;
+  margin: 0 auto 20px;
+  max-width: 780px;
+}
+
+.ts-sec-head {
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0 0 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font: 700 16px/22px Mulish, sans-serif;
+    color: var(--ts-fg);
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--ts-fg-muted); }
+  }
+  p { margin: 0; font: 400 13px/18px Mulish, sans-serif; color: var(--ts-fg-muted); }
+}
+
+/* ===== Sales source cards ===== */
+.ts-source-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ts-source {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease;
+
+  &:hover { background: var(--ts-surface-soft); }
+  &.active { border-color: var(--ts-fg); box-shadow: 0 0 0 1px var(--ts-fg) inset; }
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--ts-fg); margin-bottom: 4px; }
+  .ts-source-title { font: 700 14px/20px Mulish, sans-serif; }
+  .ts-source-sub { font: 400 12px/16px Mulish, sans-serif; color: var(--ts-fg-muted); }
+}
+
+.ts-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--ts-surface-tint);
+  border-radius: 8px;
+  font: 400 13px/18px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+}
+
+/* ===== Fields ===== */
+.ts-field { display: flex; flex-direction: column; margin-top: 14px; }
+.ts-field:first-child { margin-top: 0; }
+.ts-field-narrow { max-width: 280px; }
+
+.ts-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 12px/16px Mulish, sans-serif;
+  color: var(--ts-fg);
+  margin-bottom: 6px;
+}
+.ts-req { color: #d92d20; }
+
+.ts-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 8px;
+  font: 400 14px/20px Mulish, sans-serif;
+  color: var(--ts-fg);
+  outline: none;
+
+  &::placeholder { color: var(--ts-fg-muted); }
+  &:focus { border-color: var(--ts-fg); }
+  &:disabled { background: var(--ts-surface-soft); color: #a99db6; cursor: not-allowed; }
+}
+textarea.ts-input { height: auto; padding: 10px 12px; resize: vertical; }
+.ts-input-sm { width: 90px; }
+
+.ts-input-prefix {
+  position: relative;
+  .ts-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ts-fg-muted); font: 500 14px/1 Mulish, sans-serif; }
+  .ts-input { padding-left: 28px; }
+}
+
+.ts-help { margin: 4px 0 0; font: 400 12px/16px Mulish, sans-serif; color: var(--ts-fg-muted); }
+
+/* ===== Sale schedule panel (per-category) ===== */
+.ts-schedule-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 8px 0 4px;
+}
+.ts-schedule-inherit {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  background: var(--ts-surface-tint);
+  border-left: 3px solid var(--ts-fg-muted);
+  border-radius: 6px;
+  font: 400 12px/16px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+}
+.ts-schedule-error {
+  margin: 8px 0 0;
+  font: 600 12px/16px Mulish, sans-serif;
+  color: #c0271a;
+}
+
+.ts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.ts-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+
+.ts-subhead {
+  margin: 20px 0 6px;
+  font: 700 13px/18px Mulish, sans-serif;
+  color: var(--ts-fg);
+  padding-top: 14px;
+  border-top: 1px solid var(--ts-surface-tint);
+}
+
+/* ===== Checks / radios ===== */
+.ts-check, .ts-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 13px/18px Mulish, sans-serif;
+  color: var(--ts-fg);
+  cursor: pointer;
+
+  input { width: 16px; height: 16px; accent-color: var(--ts-fg); }
+}
+.ts-checks { display: flex; flex-direction: column; gap: 10px; }
+
+.ts-vat-row { display: flex; align-items: center; gap: 14px; }
+.ts-fee-row { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+
+/* ===== Pricing model tabs ===== */
+.ts-tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--ts-surface-tint); border-radius: 10px; margin-top: 6px; }
+.ts-tab {
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  border-radius: 7px;
+  font: 600 13px/18px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+  cursor: pointer;
+
+  &.active { background: #fff; color: var(--ts-fg); box-shadow: 0 1px 2px rgba(17,0,43,.1); }
+}
+
+/* ===== Draft card ===== */
+.ts-draft {
+  border: 1px dashed #c1b9cc;
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+  margin-bottom: 16px;
+  background: #fdfcff;
+}
+
+.ts-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ts-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  background: var(--ts-purple-soft);
+  color: var(--ts-purple);
+  border-radius: 9999px;
+  font: 700 10px/14px Mulish, sans-serif;
+}
+.ts-draft-name { font: 700 14px/20px Mulish, sans-serif; flex: 1; }
+.ts-draft-price { font: 700 15px/20px Mulish, sans-serif; color: var(--ts-fg); }
+.ts-draft-actions { display: flex; gap: 4px; }
+
+.ts-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ts-stroke);
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--ts-fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) { background: var(--ts-surface-soft); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.ts-type-row { display: flex; gap: 10px; align-items: center; }
+.ts-link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--ts-purple);
+  font: 600 13px/18px Mulish, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ts-newtype { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+
+.ts-draft-foot { margin-top: 18px; display: flex; justify-content: flex-end; }
+
+/* ===== Buttons ===== */
+.ts-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 8px;
+  background: #fff;
+  font: 600 13px/18px Mulish, sans-serif;
+  color: var(--ts-fg);
+  cursor: pointer;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  &.ts-btn-primary { background: var(--ts-fg); border-color: var(--ts-fg); color: #fff; }
+  &.ts-btn-primary:hover { background: #2a1547; }
+  &.ts-btn-primary:disabled { background: var(--ts-surface-tint); border-color: var(--ts-surface-tint); color: #a99db6; cursor: not-allowed; }
+  &.ts-btn-ghost { background: transparent; border-color: transparent; }
+  &.ts-btn-ghost:hover { background: var(--ts-surface-soft); }
+}
+
+.ts-add-cat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 44px;
+  border: 1px dashed #c1b9cc;
+  border-radius: 10px;
+  background: transparent;
+  font: 600 14px/20px Mulish, sans-serif;
+  color: var(--ts-fg);
+  cursor: pointer;
+  margin-bottom: 20px;
+
+  &:hover { background: var(--ts-surface-soft); }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+/* ===== Saved table ===== */
+.ts-table-wrap { border: 1px solid var(--ts-stroke); border-radius: 12px; overflow: hidden; }
+.ts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 13px/18px Mulish, sans-serif;
+
+  th {
+    text-align: left;
+    background: var(--ts-surface-soft);
+    color: var(--ts-fg-muted);
+    font: 700 11px/16px Mulish, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--ts-stroke);
+    white-space: nowrap;
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid #efefef; color: var(--ts-fg); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+}
+.ts-td-name { display: block; font-weight: 600; }
+.ts-td-sub { display: block; font-size: 11px; color: var(--ts-fg-muted); }
+.ts-td-actions { text-align: right; }
+
+.ts-table-wrap { overflow-x: auto; }
+.ts-table { min-width: 720px; }
+
+.ts-saved-head { margin: 18px 0 8px; font: 700 11px/16px Mulish, sans-serif; text-transform: uppercase; letter-spacing: .5px; color: var(--ts-fg-muted); text-align: center; }
+.ts-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d8d2e0; }
+.ts-dot.on { background: var(--ts-purple); }
+.ts-pools { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.ts-pool { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border: 1px solid var(--ts-stroke); border-radius: 10px; }
+.ts-pool-info strong { display: block; font: 600 14px/20px Mulish, sans-serif; }
+.ts-pool-info small { display: block; font: 400 12px/16px Mulish, sans-serif; color: var(--ts-fg-muted); }
+
+.ts-place-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
+.ts-place-note { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--ts-surface-tint); border-radius: 8px; font: 400 13px/18px Mulish, sans-serif; color: var(--ts-fg-muted); }
+.ts-place-note mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+@media (max-width: 900px) {
+  .ts-source-cards { grid-template-columns: 1fr; }
+  .ts-grid-2, .ts-grid-3 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .ts-section { padding: 16px; }
+  .ts-draft { padding: 14px; }
+  .ts-draft-head { flex-wrap: wrap; }
+  .ts-type-row { flex-direction: column; align-items: stretch; }
+  .ts-tabs { width: 100%; }
+  .ts-tab { flex: 1; }
+  .ts-newtype { flex-direction: column; align-items: stretch; }
+}

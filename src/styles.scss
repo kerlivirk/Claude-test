@@ -1,18 +1,14 @@
 @use '@angular/material' as mat;
+@use '@piletilevi/common-angular' as plg;
 
 @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
-html {
-  @include mat.theme((
-    color: (
-      primary: mat.$violet-palette,
-      tertiary: mat.$green-palette,
-    ),
-    typography: Mulish,
-    density: 0,
-  ));
+/* PLG design-system theme + component global styles (side menu, top bar,
+   app-switcher, user-context-menu, form fields, etc.) */
+@include plg.init();
 
+html {
   /* Brand tokens — referenced throughout the app */
   --brand-primary: #11002b;
   --brand-primary-hover: #1d0a3d;
@@ -63,9 +59,18 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-subtle); }
-::-webkit-scrollbar-thumb { background: var(--stroke-strong); border-radius: var(--radius-pill); }
+/* Visible scrollbars: 6px was too thin and the light thumb blended into the
+   background, so users didn't notice they could scroll. Bumped to 12px with
+   a darker thumb that has clear contrast on both light and tinted surfaces. */
+* { scrollbar-width: auto; scrollbar-color: #5d4380 #ece8f1; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: #ece8f1; }
+::-webkit-scrollbar-thumb {
+  background: #5d4380;
+  border-radius: var(--radius-pill);
+  border: 3px solid #ece8f1;
+}
+::-webkit-scrollbar-thumb:hover { background: #3d2b5d; }
 
 /* Material density / typography overrides */
 .mat-mdc-form-field { font-family: Mulish, sans-serif; }
@@ -76,6 +81,101 @@ html, body {
 .mat-mdc-tab .mdc-tab__text-label { font-family: Mulish, sans-serif; font-weight: 600; }
 .mat-mdc-table { font-family: Mulish, sans-serif; }
 .mat-mdc-menu-item { font-family: Mulish, sans-serif; }
+
+/* Series config dialog: strip Material's default panel chrome */
+.series-config-dialog-panel .mat-mdc-dialog-surface {
+  padding: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+.series-config-dialog-panel .mdc-dialog__surface {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+/* Edit-series drawer variant — anchored to the right, full height,
+   so the series detail view (with events) stays visible on the left. */
+.series-config-drawer .mat-mdc-dialog-surface,
+.series-config-drawer .mdc-dialog__surface {
+  border-radius: 16px 0 0 16px !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  box-shadow: -16px 0 40px -20px rgba(17, 0, 43, 0.25) !important;
+}
+.series-config-drawer app-series-config-dialog .sc-dialog {
+  width: 100% !important;
+  max-height: 100vh !important;
+  border-radius: 16px 0 0 16px;
+}
+.cdk-overlay-pane.series-config-drawer {
+  max-height: 100vh !important;
+}
+.series-config-drawer-backdrop {
+  background: rgba(17, 0, 43, 0.25);
+}
+
+/* Edit-series drawer goes full-width on phones */
+@media (max-width: 600px) {
+  .cdk-overlay-pane.series-config-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+  .series-config-drawer .mat-mdc-dialog-surface,
+  .series-config-drawer .mdc-dialog__surface,
+  .series-config-drawer app-series-config-dialog .sc-dialog {
+    border-radius: 0 !important;
+  }
+}
+
+/* Series summary drawer — anchored to the RIGHT, full height. */
+.series-summary-drawer .mat-mdc-dialog-surface,
+.series-summary-drawer .mdc-dialog__surface {
+  border-radius: 16px 0 0 16px !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  box-shadow: -16px 0 40px -20px rgba(17, 0, 43, 0.25) !important;
+}
+.series-summary-drawer app-series-summary-dialog .ss-dialog {
+  width: 100% !important;
+  max-height: 100vh !important;
+  border-radius: 16px 0 0 16px;
+}
+.cdk-overlay-pane.series-summary-drawer { max-height: 100vh !important; }
+
+@media (max-width: 600px) {
+  .cdk-overlay-pane.series-summary-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+  .series-summary-drawer .mat-mdc-dialog-surface,
+  .series-summary-drawer .mdc-dialog__surface,
+  .series-summary-drawer app-series-summary-dialog .ss-dialog {
+    border-radius: 0 !important;
+  }
+}
+
+/* Coreline chevron/arrow glyphs render visually heavier than the Material
+   icons they replaced — trim dropdown, nav and pagination arrows back down.
+   Scoped to app classes (ev-/sd-/ce-/pag-), never the library's plg-* icons. */
+.ev-create-arrow,
+.ev-filter-chip mat-icon,
+.sd-chip mat-icon,
+.ce-nav-caret,
+.pag-btn mat-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Dropdown / popover surfaces — force white background */
+.mat-mdc-menu-panel,
+.mat-mdc-menu-panel .mat-mdc-menu-content,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.cdk-overlay-pane .mat-mdc-menu-surface {
+  background-color: #fff !important;
+}
 
 /* Status chip helper */
 .status-chip {

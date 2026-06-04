@@ -83,6 +83,8 @@ export interface Event {
   eventRevenue?: number;
   type?: EventType;
   structureType?: string;
+  priceFrom?: number;
+  thumbnailGradient?: string;
   formData?: EventFormData;
 }
 
@@ -97,6 +99,8 @@ export const MOCK_EVENTS: Event[] = [
     ticketsSold: 324,
     totalTickets: 500,
     revenue: 16200,
+    priceFrom: 25,
+    thumbnailGradient: 'linear-gradient(135deg, #5a1212 0%, #2b0606 100%)',
     formData: {
       creationType: 'event',
       slug: 'jazz-night-2026',
@@ -125,6 +129,8 @@ export const MOCK_EVENTS: Event[] = [
     ticketsSold: 0,
     totalTickets: 2000,
     revenue: 0,
+    priceFrom: 45,
+    thumbnailGradient: 'linear-gradient(135deg, #3a1a4a 0%, #11002b 100%)',
     formData: {
       creationType: 'event',
       slug: 'rock-festival-2026',
@@ -150,6 +156,8 @@ export const MOCK_EVENTS: Event[] = [
     ticketsSold: 180,
     totalTickets: 400,
     revenue: 9000,
+    priceFrom: 35,
+    thumbnailGradient: 'linear-gradient(135deg, #4a1a3a 0%, #2a0a1f 100%)',
     formData: {
       creationType: 'event',
       slug: 'contemporary-dance-2026',
@@ -173,6 +181,8 @@ export const MOCK_EVENTS: Event[] = [
     ticketsSold: 150,
     totalTickets: 150,
     revenue: 3750,
+    priceFrom: 25,
+    thumbnailGradient: 'linear-gradient(135deg, #5a3010 0%, #2b1604 100%)',
     formData: {
       creationType: 'event',
       slug: 'comedy-night-jan-2026',
@@ -195,6 +205,8 @@ export const MOCK_EVENTS: Event[] = [
     ticketsSold: 0,
     totalTickets: 300,
     revenue: 0,
+    priceFrom: 15,
+    thumbnailGradient: 'linear-gradient(135deg, #1a3a4a 0%, #06181f 100%)',
     formData: {
       creationType: 'event',
       slug: 'art-exhibition-2026',

@@ -20,7 +20,7 @@ type Channel = 'Marketplace' | 'POS' | 'Embed';
         <div class="sc-card">
           <p class="sc-card-label">Sold tickets</p>
           <div class="sc-card-icon-row">
-            <mat-icon class="sc-card-ico">confirmation_number</mat-icon>
+            <mat-icon class="sc-card-ico">Ticket</mat-icon>
             <span class="sc-card-val">{{ data().soldTickets | number }}</span>
           </div>
           <p class="sc-card-sub">Seated: {{ data().seatedCount }}&nbsp;&nbsp;Unseated: {{ data().unseatedCount }}</p>
@@ -28,22 +28,22 @@ type Channel = 'Marketplace' | 'POS' | 'Embed';
         <div class="sc-card">
           <p class="sc-card-label">Sales value</p>
           <div class="sc-card-icon-row">
-            <mat-icon class="sc-card-ico">payments</mat-icon>
-            <mat-icon class="sc-card-ico">euro</mat-icon>
+            <mat-icon class="sc-card-ico">Pin-Dollar</mat-icon>
+            <mat-icon class="sc-card-ico">Pin-Dollar</mat-icon>
             <span class="sc-card-val">{{ data().salesValue | number:'1.2-2' }}</span>
           </div>
         </div>
         <div class="sc-card">
           <p class="sc-card-label">Transactions</p>
           <div class="sc-card-icon-row">
-            <mat-icon class="sc-card-ico">swap_horiz</mat-icon>
+            <mat-icon class="sc-card-ico">Line Arrow Transfer Horizontal 2</mat-icon>
             <span class="sc-card-val">{{ data().transactions | number }}</span>
           </div>
         </div>
         <div class="sc-card">
           <p class="sc-card-label">Number of products sold</p>
           <div class="sc-card-icon-row">
-            <mat-icon class="sc-card-ico">swap_horiz</mat-icon>
+            <mat-icon class="sc-card-ico">Line Arrow Transfer Horizontal 2</mat-icon>
             <span class="sc-card-val">{{ data().productsSold | number }}</span>
           </div>
         </div>
@@ -116,7 +116,7 @@ type Channel = 'Marketplace' | 'POS' | 'Embed';
           <label class="sc-cat-item">
             <mat-checkbox [checked]="allCatsVisible()" (change)="toggleAllCats()" color="primary" />
             <span class="sc-cat-name">ALL</span>
-            <button class="sc-cat-copy"><mat-icon class="sc-cat-copy-ico">content_copy</mat-icon></button>
+            <button class="sc-cat-copy"><mat-icon class="sc-cat-copy-ico">Copy 1</mat-icon></button>
           </label>
           @for (cat of cats(); track cat.id) {
             <label class="sc-cat-item">

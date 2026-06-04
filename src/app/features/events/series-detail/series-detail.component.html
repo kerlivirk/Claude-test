@@ -1,0 +1,226 @@
+@if (series(); as s) {
+<!-- Back link -->
+<button class="sd-back" (click)="goBack()" type="button">
+  <mat-icon>Tailless Line Arrow Left 1</mat-icon>
+  Events &amp; Series
+</button>
+
+<!-- Hero banner -->
+<section class="sd-hero">
+  <div class="sd-hero-bg"></div>
+  <div class="sd-hero-overlay">
+    <div class="sd-hero-text">
+      <h1 class="sd-hero-title">{{ s.name }}</h1>
+      <div class="sd-hero-meta">
+        <span class="sd-hero-tag sd-hero-tag--neutral">Article</span>
+        <span class="sd-hero-tag sd-hero-tag--brand">Series</span>
+      </div>
+      <div class="sd-hero-sub">
+        @if (s.startDate) {
+          <span class="sd-hero-sub-item">
+            <mat-icon class="sd-meta-ico">Blank Calendar</mat-icon>
+            {{ formatDate(s.startDate) }}
+          </span>
+        }
+        @if (s.category) {
+          <span class="sd-hero-sub-item">
+            <mat-icon class="sd-meta-ico">Dashboard Square</mat-icon>
+            {{ s.category }}
+          </span>
+        }
+        @if (s.venue) {
+          <span class="sd-hero-sub-item">
+            <mat-icon class="sd-meta-ico">Location Pin 1</mat-icon>
+            {{ s.venue }}
+          </span>
+        }
+        <span class="sd-hero-sub-item">
+          <mat-icon class="sd-meta-ico">Layers 1</mat-icon>
+          {{ s.eventCount }} events
+        </span>
+      </div>
+    </div>
+    <div class="sd-hero-actions">
+      <button class="sd-action" (click)="goCreateEvent()">
+        <mat-icon>Add 1</mat-icon>
+        Create event
+      </button>
+      <button class="sd-action" (click)="openBulkAdd()">
+        <mat-icon>Add 1</mat-icon>
+        Bulk add event
+      </button>
+      <button class="sd-action" (click)="goEditSeries()">
+        <mat-icon>Pencil</mat-icon>
+        Edit series
+      </button>
+      <button class="sd-action" [class.sd-action-on]="multiSelect()" (click)="toggleMultiSelect()">
+        <mat-icon>Check Circle</mat-icon>
+        {{ multiSelect() ? 'Done' : 'Multi edit' }}
+      </button>
+      <button class="sd-action sd-action-icon" [matMenuTriggerFor]="moreMenu">
+        <mat-icon>Vertical Menu</mat-icon>
+      </button>
+      <mat-menu #moreMenu="matMenu">
+        <button mat-menu-item><mat-icon>Link Share 2</mat-icon> Share</button>
+        <button mat-menu-item><mat-icon>Visible</mat-icon> Preview</button>
+        <button mat-menu-item (click)="duplicateSeries()"><mat-icon>Copy 1</mat-icon> Duplicate</button>
+        <button mat-menu-item><mat-icon>Archive Box</mat-icon> Archive</button>
+        <button mat-menu-item><mat-icon>Trash</mat-icon> Delete</button>
+      </mat-menu>
+    </div>
+  </div>
+</section>
+
+<!-- KPI cards -->
+<section class="sd-kpis">
+  <div class="sd-kpi">
+    <span class="sd-kpi-label">Total events</span>
+    <span class="sd-kpi-value">{{ kpiTotal() }}</span>
+  </div>
+  <div class="sd-kpi">
+    <span class="sd-kpi-label">Ticket sold</span>
+    <span class="sd-kpi-value">{{ kpiTicketSold() | number:'1.0-0':'en-GB' }}</span>
+  </div>
+  <div class="sd-kpi">
+    <span class="sd-kpi-label">Revenue</span>
+    <span class="sd-kpi-value">€ {{ kpiRevenue() | number:'1.0-0':'en-GB' }}</span>
+  </div>
+  <div class="sd-kpi">
+    <span class="sd-kpi-label">Capacity</span>
+    <span class="sd-kpi-value">{{ kpiCapacity() | number:'1.0-0':'en-GB' }}</span>
+  </div>
+</section>
+
+<!-- Filters -->
+<section class="sd-filters">
+  <div class="sd-search">
+    <mat-icon class="sd-search-ico">Magnifying Glass</mat-icon>
+    <input
+      type="text"
+      placeholder="Search by Name, ID or venue"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)" />
+  </div>
+
+  <button class="sd-chip" [matMenuTriggerFor]="statusMenu">
+    {{ statusFilter() === 'all' ? 'All Status' : statusFilter() }}
+    <mat-icon>Tailless Line Arrow Down 1</mat-icon>
+  </button>
+  <mat-menu #statusMenu="matMenu">
+    <button mat-menu-item (click)="statusFilter.set('all')">All Status</button>
+    @for (st of statusOptions; track st) {
+      <button mat-menu-item (click)="statusFilter.set(st)">{{ st }}</button>
+    }
+  </mat-menu>
+
+  <button class="sd-chip" [matMenuTriggerFor]="datesMenu">
+    All Dates
+    <mat-icon>Tailless Line Arrow Down 1</mat-icon>
+  </button>
+  <mat-menu #datesMenu="matMenu">
+    <button mat-menu-item>All Dates</button>
+    <button mat-menu-item>This week</button>
+    <button mat-menu-item>This month</button>
+  </mat-menu>
+
+  <button class="sd-chip">
+    Date
+    <mat-icon>Tailless Line Arrow Down 1</mat-icon>
+  </button>
+</section>
+
+<!-- Bulk action bar (visible whenever multi edit is on) -->
+@if (multiSelect()) {
+  <div class="sd-bulkbar">
+    <span class="sd-bulkbar-count">
+      {{ selectedCount() > 0 ? selectedCount() + ' selected' : 'Select events to edit in bulk' }}
+    </span>
+    <div class="sd-bulkbar-actions">
+      <button class="sd-bulkbar-btn" [matMenuTriggerFor]="moveMenu" [disabled]="selectedCount() === 0">
+        <mat-icon>Line Arrow Transfer Horizontal 2</mat-icon>
+        Move to series
+        <mat-icon class="sd-bulkbar-caret">Tailless Line Arrow Down 1</mat-icon>
+      </button>
+      <mat-menu #moveMenu="matMenu">
+        @for (os of otherSeries(); track os.id) {
+          <button mat-menu-item (click)="moveSelectedTo(os.id)">{{ os.name }}</button>
+        }
+        @if (otherSeries().length === 0) {
+          <button mat-menu-item disabled>No other series</button>
+        }
+      </mat-menu>
+
+      <button class="sd-bulkbar-btn" (click)="editSelected()" [disabled]="selectedCount() === 0">
+        <mat-icon>Pencil</mat-icon>
+        Edit selected
+      </button>
+      <button class="sd-bulkbar-btn" (click)="duplicateSelected()" [disabled]="selectedCount() === 0">
+        <mat-icon>Copy 1</mat-icon>
+        Duplicate
+      </button>
+      <button class="sd-bulkbar-btn sd-bulkbar-btn-danger" (click)="deleteSelected()" [disabled]="selectedCount() === 0">
+        <mat-icon>Trash</mat-icon>
+        Delete
+      </button>
+      @if (selectedCount() > 0) {
+        <button class="sd-bulkbar-btn sd-bulkbar-btn-ghost" (click)="clearSelection()">Clear</button>
+      }
+    </div>
+  </div>
+}
+
+<!-- Event grid -->
+<section class="sd-grid">
+  @for (e of filteredEvents(); track e.id) {
+    <article class="sd-evcard" [class.sd-evcard-selected]="isSelected(e.id)" (click)="openEvent(e)">
+      @if (multiSelect()) {
+        <mat-checkbox
+          class="sd-evcard-check"
+          [checked]="isSelected(e.id)"
+          (change)="toggleSelect(e.id)"
+          (click)="$event.stopPropagation()"></mat-checkbox>
+      }
+      <div class="sd-evcard-thumb" [style.background]="gradientFor($index)">
+        <span class="sd-evcard-chip" [class]="'sd-evcard-chip--' + chipVariant(e.status)">
+          {{ chipLabel(e.status) }}
+        </span>
+      </div>
+      <div class="sd-evcard-body">
+        <h3 class="sd-evcard-title">{{ e.name }}</h3>
+        <div class="sd-evcard-meta">
+          <span><mat-icon class="sd-meta-ico">Blank Calendar</mat-icon> {{ formatDate(e.date) }}</span>
+          <span><mat-icon class="sd-meta-ico">Location Pin 1</mat-icon> {{ e.venue || '—' }}</span>
+        </div>
+        <div class="sd-evcard-sales">
+          <span class="sd-evcard-sales-label">{{ e.ticketsSold }} / {{ e.totalTickets }} tickets</span>
+          <div class="sd-evcard-sales-bar">
+            <div
+              class="sd-evcard-sales-fill"
+              [style.width.%]="e.totalTickets ? (e.ticketsSold / e.totalTickets) * 100 : 0"></div>
+          </div>
+        </div>
+        <div class="sd-evcard-foot">
+          <span class="sd-evcard-price">€{{ e.priceFrom || 0 }}</span>
+          <div class="sd-evcard-actions">
+            <button class="sd-evcard-iconbtn" (click)="openPublicShare(e, $event)" title="Share event link" matTooltip="Share public event link">
+              <mat-icon>Link Share 2</mat-icon>
+            </button>
+            <button class="sd-evcard-iconbtn" (click)="openShare(e, $event)" title="Share with organizers" matTooltip="Share with organizers">
+              <mat-icon>User Group</mat-icon>
+            </button>
+            <button class="sd-evcard-tickets" (click)="openTickets(e, $event)">
+              <mat-icon>Ticket</mat-icon> Sales overview
+            </button>
+          </div>
+        </div>
+      </div>
+    </article>
+  }
+  @if (filteredEvents().length === 0) {
+    <div class="sd-empty">
+      <mat-icon>Blank Calendar</mat-icon>
+      <p>No events match your filters.</p>
+    </div>
+  }
+</section>
+}

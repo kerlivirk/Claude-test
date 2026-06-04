@@ -1,196 +1,288 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatListModule } from '@angular/material/list';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Series } from '../../shared/models/series.model';
+import { SeriesStore } from '../../shared/state/series-store.service';
+import { SeriesConfigDialogComponent, SeriesConfigResult } from '../../features/events/series-config-dialog/series-config-dialog.component';
+import { EventStructureDialogComponent, EventStructureChoice } from '../../features/events/event-structure-dialog/event-structure-dialog.component';
+import {
+  PlgBackOfficeLayoutModule,
+  PlgMenuDialogMobileComponent,
+  PlgSideMenuDesktopComponent,
+  PlgTopBarComponent,
+  PlgAppSwitcherComponent,
+  PlgAppListPanelComponent,
+  PlgAppListPanelItemDirective,
+  PlgAppSwitcherItem,
+  PlgUserContextMenuComponent,
+  LegalEntitySwitchPanelViewModel,
+} from '@piletilevi/common-angular';
 
-interface NavItem {
+interface NavPage {
+  id: string;
   label: string;
   icon: string;
   route: string;
 }
-
-interface NavGroup {
-  title: string;
-  items: NavItem[];
+interface NavSection {
+  id: string;
+  label: string;
+  icon: string;
+  showDividerAfterSection?: boolean;
+  pages: NavPage[];
 }
 
 @Component({
   selector: 'app-shell-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive,
-    MatSidenavModule, MatToolbarModule, MatListModule,
-    MatIconModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatIconModule,
+    MatMenuModule,
+    MatDialogModule,
+    PlgBackOfficeLayoutModule,
+    PlgAppSwitcherComponent,
+    PlgAppListPanelComponent,
+    PlgAppListPanelItemDirective,
+    PlgUserContextMenuComponent,
+  ],
   template: `
-    <mat-sidenav-container class="app-container">
-      <mat-sidenav mode="side" opened class="app-sidenav">
-        <div class="logo">
-          <span class="logo-icon">🎫</span>
-          <span class="logo-text">PLG Back Office</span>
-        </div>
-        <nav class="nav">
-          @for (group of navGroups; track group.title) {
-            <div class="nav-group">
-              <p class="nav-group-title">{{ group.title }}</p>
-              <div class="nav-items">
-                @for (item of group.items; track item.route) {
-                  <a [routerLink]="item.route" routerLinkActive="nav-active" class="nav-item">
-                    <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
-                    <span class="nav-label">{{ item.label }}</span>
+    <plg-app-layout>
+      <plg-top-bar #topBar (sideMenuToggled)="toggleSideMenu()" (mobileMenuToggled)="toggleMobileMenu()">
+        <div left class="topbar-left">
+          <plg-app-switcher #appSwitcher>
+            <ng-template #plgAppSwitcherLocalAppsTab>
+              <plg-app-list-panel>
+                @for (app of localApps; track app.id) {
+                  <a
+                    plgAppListItem
+                    href="#"
+                    [class.active]="selectedAppId() === app.id"
+                    (click)="selectedAppId.set(app.id); appSwitcher.closeDropdown(); $event.preventDefault()">
+                    @if (app.icon) { <mat-icon>{{ app.icon }}</mat-icon> }
+                    <span>{{ app.label }}</span>
                   </a>
                 }
-              </div>
-            </div>
+              </plg-app-list-panel>
+            </ng-template>
+            <ng-template #plgAppSwitcherGlobalAppsTab>
+              <plg-app-list-panel>
+                @for (app of globalApps; track app.id) {
+                  <a plgAppListItem href="#" (click)="$event.preventDefault()">
+                    @if (app.icon) { <mat-icon>{{ app.icon }}</mat-icon> }
+                    <span>{{ app.label }}</span>
+                  </a>
+                }
+              </plg-app-list-panel>
+            </ng-template>
+          </plg-app-switcher>
+          <h2 class="topbar-brand">piletilevi PLG</h2>
+        </div>
+
+        <div right class="topbar-right">
+          <button class="topbar-create" (click)="openCreateDialog()">
+            <mat-icon>Add 1</mat-icon>
+            <span>Create</span>
+          </button>
+
+          <plg-user-context-menu
+            [legalEntities]="legalEntities"
+            [selectedLegalEntity]="selectedLegalEntity()"
+            (selectedLegalEntityChange)="selectedLegalEntity.set($event)"
+            [username]="'Annika Kütt'"
+            [email]="'annika.kutt@piletilevi.ee'">
+            <ng-template #plgUserContextMenuFooter>
+              Contact Piletilevi admin:
+              <a href="mailto:info@piletilevi.ee">info&#64;piletilevi.ee</a>
+              <br />
+              (Mon-Fri 9-21, Sat-Sun 10-21)
+            </ng-template>
+          </plg-user-context-menu>
+        </div>
+      </plg-top-bar>
+
+      <plg-side-menu-desktop #sideMenu>
+        <plg-sections-menu>
+          @for (section of sections; track section.id) {
+            <plg-sections-menu-item
+              [id]="section.id"
+              [label]="section.label"
+              [icon]="section.icon"
+              [active]="section.id === selectedSectionId()"
+              (click)="selectedSectionId.set(section.id)" />
           }
-        </nav>
-        <div class="user">
-          <div class="avatar">AK</div>
-          <div class="user-info">
-            <p class="uname">Annika Kütt</p>
-            <p class="urole">Admin</p>
-          </div>
-        </div>
-      </mat-sidenav>
-      <mat-sidenav-content class="app-content">
-        <div class="topbar">
-          <div class="topbar-right">
-            <button mat-icon-button><mat-icon>notifications_none</mat-icon></button>
-            <button mat-icon-button><mat-icon>help_outline</mat-icon></button>
-          </div>
-        </div>
-        <div class="page"><router-outlet /></div>
-      </mat-sidenav-content>
-    </mat-sidenav-container>
+        </plg-sections-menu>
+
+        <plg-pages-menu>
+          <plg-pages-menu-group [label]="selectedSection().label">
+            @for (page of selectedSection().pages; track page.id) {
+              <a
+                plgPagesMenuItem
+                [routerLink]="page.route"
+                routerLinkActive
+                #rla="routerLinkActive"
+                [active]="rla.isActive">
+                <mat-icon plgPagesMenuItemIcon>{{ page.icon }}</mat-icon>
+                {{ page.label }}
+              </a>
+            }
+          </plg-pages-menu-group>
+        </plg-pages-menu>
+      </plg-side-menu-desktop>
+
+      <plg-content contentClass="app-content-pad">
+        <router-outlet />
+      </plg-content>
+
+      <plg-menu-dialog-mobile #mobileMenu (close)="onMobileMenuClose()">
+        <plg-sections-menu>
+          @for (section of sections; track section.id) {
+            <plg-sections-menu-item
+              [id]="section.id"
+              [label]="section.label"
+              [icon]="section.icon"
+              [active]="section.id === selectedSectionId()"
+              (click)="selectedSectionId.set(section.id)" />
+          }
+        </plg-sections-menu>
+        <plg-pages-menu>
+          <plg-pages-menu-group [label]="selectedSection().label">
+            @for (page of selectedSection().pages; track page.id) {
+              <a plgPagesMenuItem [routerLink]="page.route" (clicked)="closeMobile()">
+                <mat-icon plgPagesMenuItemIcon>{{ page.icon }}</mat-icon>
+                {{ page.label }}
+              </a>
+            }
+          </plg-pages-menu-group>
+        </plg-pages-menu>
+      </plg-menu-dialog-mobile>
+    </plg-app-layout>
   `,
   styles: [`
-    .app-container { height: 100vh; }
-    .app-sidenav {
-      width: 244px;
-      background: #f5f5f5;
-      border-right: 1px solid #e9e7ed;
-      display: flex;
-      flex-direction: column;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 20px 20px 16px;
-      border-bottom: 1px solid #e9e7ed;
-    }
-    .logo-icon { font-size: 18px; }
-    .logo-text {
-      font-size: 13px;
+    :host { display: block; height: 100vh; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-brand {
+      margin: 0;
+      font-family: Mulish, sans-serif;
       font-weight: 700;
-      color: #11002b;
-      font-family: Mulish, sans-serif;
+      font-weight: var(--font-weight-bold, 700);
+      font-size: 16px;
+      color: var(--text-on-surface-primary, #11002b);
+      white-space: nowrap;
     }
-    .nav { flex: 1; padding: 16px 16px; overflow-y: auto; }
-    .nav-group { margin-bottom: 24px; }
-    .nav-group-title {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .5px;
-      color: #84738f;
-      margin: 0 16px 12px;
-      font-family: Mulish, sans-serif;
+    ::ng-deep .app-content-pad { padding: 0 0 0 var(--space-2xl, 16px); }
+    .topbar-right { display: inline-flex; align-items: center; gap: 12px; }
+    .topbar-create {
+      display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px;
+      background: #06d373; border: 1px solid #06d373; border-radius: 9999px;
+      font: 700 14px/20px Mulish, sans-serif; color: #002b1a; cursor: pointer;
     }
-    .nav-items { display: flex; flex-direction: column; gap: 4px; }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #11002b;
-      font-size: 14px;
-      font-family: Mulish, sans-serif;
-      letter-spacing: .1px;
-      transition: background .15s;
+    .topbar-create:hover { background: #04a85b; }
+    .topbar-create mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .topbar-create-caret { font-size: 14px !important; width: 14px !important; height: 14px !important; opacity: .7; }
+    @media (max-width: 600px) {
+      .topbar-create { padding: 0; width: 38px; }
+      .topbar-create span, .topbar-create-caret { display: none; }
     }
-    .nav-item:hover { background: rgba(17,0,43,.05); }
-    .nav-active {
-      background: #11002b !important;
-      color: #fff !important;
-      border-radius: 9999px !important;
-      font-weight: 500;
-    }
-    .nav-active .nav-icon { color: #fff; }
-    .nav-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: #11002b;
-      flex-shrink: 0;
-    }
-    .nav-label { flex: 1; }
-    .user {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 20px;
-      border-top: 1px solid #e9e7ed;
-    }
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #06d373;
-      color: #11002b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: Mulish, sans-serif;
-      flex-shrink: 0;
-    }
-    .user-info { min-width: 0; }
-    .uname { font-size: 13px; font-weight: 600; color: #11002b; margin: 0; font-family: Mulish, sans-serif; }
-    .urole { font-size: 11px; color: #84738f; margin: 0; font-family: Mulish, sans-serif; }
-    .app-content { background: #fff; }
-    .topbar {
-      background: #fff;
-      border-bottom: 1px solid #e9e7ed;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0 24px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .topbar-right { display: flex; gap: 4px; }
-    .page { padding: 24px; min-height: calc(100vh - 56px); }
-  `]
+  `],
 })
 export class ShellLayoutComponent {
-  navGroups: NavGroup[] = [
+  private readonly mobileMenu = viewChild(PlgMenuDialogMobileComponent);
+  private readonly sideMenu = viewChild<PlgSideMenuDesktopComponent>('sideMenu');
+  private readonly topBar = viewChild<PlgTopBarComponent>('topBar');
+  private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
+  private readonly store = inject(SeriesStore);
+
+  /** Topbar "Create" — opens the same Event-or-Series picker used everywhere
+   *  else, then routes to the matching create flow. */
+  openCreateDialog() {
+    const ref = this.dialog.open(EventStructureDialogComponent, {
+      width: '720px', maxWidth: '95vw', panelClass: 'event-structure-dialog',
+    });
+    ref.afterClosed().subscribe((choice: EventStructureChoice | undefined) => {
+      if (choice === 'single') this.router.navigate(['/events/create']);
+      else if (choice === 'series') this.createSeries();
+    });
+  }
+
+  private createSeries() {
+    const ref = this.dialog.open(SeriesConfigDialogComponent, {
+      width: '760px', maxWidth: '96vw', maxHeight: '92vh', panelClass: 'series-config-dialog-panel',
+    });
+    ref.afterClosed().subscribe((result: SeriesConfigResult | undefined) => {
+      if (!result) return;
+      const id = this.store.nextId();
+      const newSeries: Series = {
+        ...result, id, name: result.name ?? 'Untitled series',
+        status: 'Draft', eventCount: 0, eventIds: [],
+      };
+      this.store.upsert(newSeries);
+      this.router.navigate(['/events/series', id]);
+    });
+  }
+
+  readonly legalEntities: LegalEntitySwitchPanelViewModel[] = [
+    { id: 1, name: 'PLG Estonia', description: 'Piletilevi Group AS' },
+    { id: 2, name: 'PLG Latvia', description: 'Biļešu Paradīze SIA' },
+    { id: 3, name: 'PLG Lithuania', description: 'Bilietai LT UAB' },
+    { id: 4, name: 'Kumu Art Museum', description: 'Eesti Kunstimuuseum' },
+    { id: 5, name: 'Tallinn Arena', description: 'Saku Suurhall AS' },
+    { id: 6, name: 'Estonian National Opera', description: 'Rahvusooper Estonia' },
+  ];
+  readonly selectedLegalEntity = signal<LegalEntitySwitchPanelViewModel | null>(this.legalEntities[0]);
+
+  readonly localApps: PlgAppSwitcherItem[] = [
+    { id: 'event-admin', label: 'Event Admin', icon: 'Events' },
+    { id: 'pos', label: 'Point of Sale', icon: 'Ticket' },
+    { id: 'portal', label: 'Portal', icon: 'Store 1' },
+  ];
+  readonly globalApps: PlgAppSwitcherItem[] = [
+    { id: 'gds', label: 'Global Data System', icon: 'Cloud' },
+  ];
+  readonly selectedAppId = signal<string>('event-admin');
+
+  readonly sections: NavSection[] = [
     {
-      title: 'EVENTS & SERIES',
-      items: [
-        { label: 'Dashboard', icon: 'bar_chart', route: '/dashboard' },
-        { label: 'Single Events & Series', icon: 'calendar_today', route: '/events' },
-        { label: 'Collections', icon: 'sell', route: '/collections' },
-        { label: 'Programme of all events', icon: 'event', route: '/programme' },
-        { label: 'Add-ons Configuration', icon: 'extension', route: '/addons' },
+      id: 'events',
+      label: 'Events',
+      icon: 'Calendar Check',
+      pages: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'Chart Column', route: '/dashboard' },
+        { id: 'events', label: 'Series & Events', icon: 'Blank Calendar', route: '/events' },
+        { id: 'collections', label: 'Collections', icon: 'Tag', route: '/collections' },
+        { id: 'programme', label: 'Programme of all events', icon: 'Calendar Check', route: '/programme' },
+        { id: 'addons', label: 'Add-ons Configuration', icon: 'Dashboard Square', route: '/addons' },
       ],
     },
     {
-      title: 'TICKET SETUP',
-      items: [
-        { label: 'Templates', icon: 'confirmation_number', route: '/templates' },
+      id: 'tickets',
+      label: 'Tickets',
+      icon: 'Ticket',
+      pages: [
+        { id: 'templates', label: 'Templates', icon: 'Ticket 1', route: '/templates' },
       ],
     },
     {
-      title: 'EVENT SETTINGS',
-      items: [
-        { label: 'Event templates', icon: 'content_copy', route: '/event-templates' },
+      id: 'settings',
+      label: 'Settings',
+      icon: 'Cog 1',
+      pages: [
+        { id: 'event-templates', label: 'Event templates', icon: 'Copy 1', route: '/event-templates' },
       ],
     },
   ];
+
+  readonly selectedSectionId = signal<string>('events');
+  readonly selectedSection = computed(() =>
+    this.sections.find(s => s.id === this.selectedSectionId()) ?? this.sections[0]);
+
+  toggleSideMenu() { this.sideMenu()?.toggle(); }
+  toggleMobileMenu() { this.mobileMenu()?.toggle(); }
+  closeMobile() { this.mobileMenu()?.closeDialog(); }
+  onMobileMenuClose() { this.topBar()?.resetMobileMenuToggleButton(); }
 }

@@ -42,7 +42,7 @@ import { Event, EventType } from '../../models/event.model';
             }
           </div>
           <button mat-icon-button class="close-btn" (click)="closed.emit()">
-            <mat-icon>close</mat-icon>
+            <mat-icon>Delete 1</mat-icon>
           </button>
         </div>
 
@@ -77,7 +77,7 @@ import { Event, EventType } from '../../models/event.model';
           @if (event()!.date || event()!.formData?.eventTime) {
             <div class="section">
               <p class="section-title">
-                <mat-icon>calendar_today</mat-icon> Date & Time
+                <mat-icon>Blank Calendar</mat-icon> Date & Time
               </p>
               <div class="section-rows">
                 <div class="row">
@@ -116,7 +116,7 @@ import { Event, EventType } from '../../models/event.model';
           @if (event()!.venue) {
             <div class="section">
               <p class="section-title">
-                <mat-icon>location_on</mat-icon> Location
+                <mat-icon>Location Pin 1</mat-icon> Location
               </p>
               <div class="section-rows">
                 <div class="row">
@@ -137,7 +137,7 @@ import { Event, EventType } from '../../models/event.model';
           @if (description()) {
             <div class="section">
               <p class="section-title">
-                <mat-icon>description</mat-icon> Description
+                <mat-icon>Text File</mat-icon> Description
               </p>
               <p class="section-text" [innerHTML]="description()"></p>
             </div>
@@ -146,7 +146,7 @@ import { Event, EventType } from '../../models/event.model';
           <!-- Ticket Sales -->
           <div class="section">
             <p class="section-title">
-              <mat-icon>confirmation_number</mat-icon> Ticket Sales
+              <mat-icon>Ticket</mat-icon> Ticket Sales
             </p>
             <div class="section-rows">
               <div class="row">
@@ -192,7 +192,7 @@ import { Event, EventType } from '../../models/event.model';
           @if (event()!.formData?.tags?.length) {
             <div class="section">
               <p class="section-title">
-                <mat-icon>label</mat-icon> Tags
+                <mat-icon>Tag</mat-icon> Tags
               </p>
               <div class="tags">
                 @for (tag of event()!.formData!.tags; track tag) {
@@ -211,7 +211,7 @@ import { Event, EventType } from '../../models/event.model';
             class="edit-btn"
             (click)="editClicked()"
           >
-            <mat-icon>edit</mat-icon>
+            <mat-icon>Pencil</mat-icon>
             Edit Event
           </button>
           <button mat-stroked-button (click)="closed.emit()">

@@ -24,6 +24,9 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": ["node_modules"]
+            },
             "assets": [
               {
                 "glob": "**/*",
@@ -31,6 +34,11 @@
               }
             ],
             "styles": [
+              "node_modules/@piletilevi/common-ui-assets/styles/color-primitives.css",
+              "node_modules/@piletilevi/common-ui-assets/styles/sizes-rem.css",
+              "node_modules/@piletilevi/common-ui-assets/styles/typography-primitives.css",
+              "node_modules/@piletilevi/common-ui-assets/styles/theme-light.css",
+              "node_modules/@piletilevi/common-ui-assets/fonts/coreline-icons.css",
               "src/styles.scss"
             ]
           },

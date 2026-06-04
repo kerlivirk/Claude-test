@@ -1,0 +1,96 @@
+<header class="db-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Overview of sales and event performance.</p>
+  </div>
+  <a class="db-cta" routerLink="/events"><mat-icon>Blank Calendar</mat-icon> Go to events</a>
+</header>
+
+<!-- KPI cards -->
+<section class="db-kpis">
+  @for (k of kpis; track k.label) {
+    <div class="db-kpi">
+      <div class="db-kpi-top">
+        <span class="db-kpi-ico"><mat-icon>{{ k.icon }}</mat-icon></span>
+        <span class="db-kpi-delta" [class.up]="k.up" [class.down]="!k.up">{{ k.delta }}</span>
+      </div>
+      <span class="db-kpi-value">{{ k.value }}</span>
+      <span class="db-kpi-label">{{ k.label }}</span>
+    </div>
+  }
+</section>
+
+<div class="db-grid">
+  <!-- Revenue bar chart -->
+  <section class="db-card db-card-wide">
+    <div class="db-card-head">
+      <div>
+        <h2>Revenue</h2>
+        <p>Monthly gross sales</p>
+      </div>
+      <div class="db-range">
+        <button [class.active]="range() === '30d'" (click)="range.set('30d')">30d</button>
+        <button [class.active]="range() === '90d'" (click)="range.set('90d')">90d</button>
+        <button [class.active]="range() === '12m'" (click)="range.set('12m')">12m</button>
+      </div>
+    </div>
+    <div class="db-bars">
+      @for (m of months; track m.label) {
+        <div class="db-bar-col">
+          <div class="db-bar" [style.height.%]="(m.revenue / maxRevenue()) * 100">
+            <span class="db-bar-tip">€ {{ m.revenue | number }}</span>
+          </div>
+          <span class="db-bar-label">{{ m.label }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Category donut -->
+  <section class="db-card">
+    <div class="db-card-head">
+      <div><h2>Sales by category</h2><p>Share of tickets</p></div>
+    </div>
+    <div class="db-donut-wrap">
+      <div class="db-donut" [style.background]="donut()">
+        <div class="db-donut-hole"><span>186K</span><small>tickets</small></div>
+      </div>
+      <ul class="db-legend">
+        @for (c of categories; track c.label) {
+          <li><span class="db-legend-dot" [style.background]="c.color"></span>{{ c.label }} <strong>{{ c.value }}%</strong></li>
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Top events -->
+  <section class="db-card db-card-wide">
+    <div class="db-card-head"><div><h2>Top events</h2><p>By revenue</p></div></div>
+    <div class="db-top">
+      @for (e of topEvents; track e.name) {
+        <div class="db-top-row">
+          <div class="db-top-info">
+            <strong>{{ e.name }}</strong>
+            <small>{{ e.venue }}</small>
+          </div>
+          <div class="db-top-bar">
+            <div class="db-top-bar-fill" [style.width.%]="pct(e)"></div>
+          </div>
+          <span class="db-top-sold">{{ e.sold | number }} / {{ e.total | number }}</span>
+          <span class="db-top-rev">€ {{ e.revenue | number }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Conversion funnel (simple) -->
+  <section class="db-card">
+    <div class="db-card-head"><div><h2>Conversion</h2><p>Last 30 days</p></div></div>
+    <div class="db-funnel">
+      <div class="db-funnel-row"><span>Page views</span><div class="db-funnel-bar" style="width:100%"><b>248,900</b></div></div>
+      <div class="db-funnel-row"><span>Added to cart</span><div class="db-funnel-bar" style="width:62%"><b>154,318</b></div></div>
+      <div class="db-funnel-row"><span>Checkout</span><div class="db-funnel-bar" style="width:34%"><b>84,626</b></div></div>
+      <div class="db-funnel-row"><span>Purchased</span><div class="db-funnel-bar db-funnel-bar-done" style="width:21%"><b>52,269</b></div></div>
+    </div>
+  </section>
+</div>

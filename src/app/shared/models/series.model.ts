@@ -11,6 +11,45 @@ export interface Series {
   eventIds: string[];
   mainEventId?: string;
   coverImage?: string;
+  /**
+   * Hidden / system-created series wrapping a "single" event. The backend always
+   * stores Show/Series + Event as a pair; for events the user thinks of as
+   * standalone, the wrapping series stays out of every user-facing surface
+   * (events list, dropdowns, share dialogs). Promote via `attachEventToSeries`;
+   * detach recreates a fresh hidden wrapper.
+   */
+  hidden?: boolean;
+
+  /* Translations: language code -> { fieldKey -> value } (base language is the main fields) */
+  translations?: Record<string, Record<string, string>>;
+
+  /* Extended fields from the Create Series modal */
+  importantInfo?: string;
+  additionalDesc?: string;
+  cashierInstructions?: string;
+  posNotes?: string;
+  category?: string;
+  genre?: string;
+  cast?: string;
+  creators?: string;
+  priceInfo?: string;
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  venue?: string;
+  location?: string;
+  subLocation?: string;
+  seatingPlan?: string;
+  organizerAccess?: 'all' | 'select';
+  selectedOrganizers?: string;
+  reviewHomepage?: string;
+  reviewAuthor?: string;
+  vodLinks?: string;
+  poster?: string;
+  photos?: string;
+  photoSource?: string;
+  multimedia?: string;
 }
 
 export const MOCK_SERIES: Series[] = [
@@ -24,6 +63,8 @@ export const MOCK_SERIES: Series[] = [
     eventCount: 3,
     eventIds: ['1', '3'],
     mainEventId: '1',
+    category: 'Festival',
+    genre: 'Jazz',
   },
   {
     id: 's2',
@@ -35,6 +76,8 @@ export const MOCK_SERIES: Series[] = [
     eventCount: 5,
     eventIds: ['4'],
     mainEventId: '4',
+    category: 'Comedy',
+    genre: 'Comedy',
   },
   {
     id: 's3',
@@ -45,5 +88,7 @@ export const MOCK_SERIES: Series[] = [
     status: 'Draft',
     eventCount: 2,
     eventIds: ['5'],
+    category: 'Art',
+    genre: 'Classical',
   },
 ];

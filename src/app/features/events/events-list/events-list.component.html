@@ -1,162 +1,364 @@
-<div class="page-header">
-  <div>
-    <h1 class="page-title">Single Events &amp; Series</h1>
-    <p class="page-subtitle">Manage your events and series</p>
+<!-- Page header -->
+<header class="ev-header">
+  <div class="ev-header-text">
+    <h1>Events &amp; Series management</h1>
+    <p>Manage all your events in one place</p>
   </div>
-  <button mat-flat-button color="primary" class="create-btn" (click)="openCreateDialog()">
-    <mat-icon>add</mat-icon>
+  <button class="ev-create-btn" (click)="openCreateDialog()">
     Create
   </button>
-</div>
+</header>
 
-<mat-tab-group class="status-tabs" (selectedIndexChange)="onTabChange($event)">
-  @for (t of statusTabs; track t) {
-    <mat-tab [label]="t"></mat-tab>
-  }
-</mat-tab-group>
-
-<div class="filters-row">
-  <mat-form-field appearance="outline" class="search-field">
-    <mat-icon matPrefix>search</mat-icon>
-    <mat-label>Search by name, venue or ID</mat-label>
-    <input matInput [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" />
-  </mat-form-field>
-
-  <mat-form-field appearance="outline" class="type-field">
-    <mat-label>Type</mat-label>
-    <mat-select [ngModel]="typeFilter()" (ngModelChange)="onTypeChange($event)">
-      <mat-option value="all">All</mat-option>
-      <mat-option value="event">Events</mat-option>
-      <mat-option value="series">Series</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field appearance="outline" class="venue-field">
-    <mat-label>Venue</mat-label>
-    <mat-select multiple [ngModel]="selectedVenues()" (ngModelChange)="onVenuesChange($event)">
-      @for (v of allVenues(); track v) {
-        <mat-option [value]="v">{{ v }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-</div>
-
-@if (selection().size > 0) {
-  <div class="bulk-bar">
-    <span class="bulk-count">{{ selection().size }} selected</span>
-    <button mat-stroked-button><mat-icon>edit</mat-icon> Bulk edit</button>
-    <button mat-stroked-button><mat-icon>layers</mat-icon> Convert to series</button>
-    <button mat-stroked-button color="warn"><mat-icon>delete</mat-icon> Delete</button>
+<!-- KPI cards -->
+<section class="ev-kpis">
+  <div class="ev-kpi">
+    <span class="ev-kpi-label">Total events</span>
+    <span class="ev-kpi-value">{{ kpiTotal() }}</span>
   </div>
-}
+  <div class="ev-kpi">
+    <span class="ev-kpi-label">Active Series with Sales</span>
+    <span class="ev-kpi-value">{{ kpiActiveWithSales() }}</span>
+  </div>
+  <div class="ev-kpi">
+    <span class="ev-kpi-label">Revenue</span>
+    <span class="ev-kpi-value">€ {{ kpiRevenue() | number:'1.0-0':'en-GB' }}</span>
+  </div>
+  <div class="ev-kpi">
+    <span class="ev-kpi-label">Capacity</span>
+    <span class="ev-kpi-value">{{ kpiCapacity() | number:'1.0-0':'en-GB' }}</span>
+  </div>
+</section>
 
-<div class="table-wrap mat-elevation-z0">
-  <table mat-table [dataSource]="dataSource" matSort>
-    <ng-container matColumnDef="select">
-      <th mat-header-cell *matHeaderCellDef>
-        <mat-checkbox
-          [checked]="allSelected()"
-          [indeterminate]="someSelected()"
-          (change)="toggleSelectAll()"></mat-checkbox>
-      </th>
-      <td mat-cell *matCellDef="let row">
-        <mat-checkbox [checked]="isSelected(row.id)" (change)="toggleSelect(row.id)"></mat-checkbox>
-      </td>
-    </ng-container>
+<!-- Main container -->
+<section class="ev-panel">
+  <!-- Tab pills row: time-window tabs + kind-filter tabs side by side -->
+  <div class="ev-tabs-row">
+    <div class="ev-tabs">
+      @for (t of tabs; track t.key) {
+        <button class="ev-tab" [class.active]="activeTab() === t.key" (click)="activeTab.set(t.key)">
+          {{ t.label }}
+          <span class="ev-tab-count">{{ tabCounts()[t.key] }}</span>
+        </button>
+      }
+    </div>
+    <div class="ev-tabs ev-tabs-kind">
+      @for (k of kindTabs; track k.key) {
+        <button class="ev-tab" [class.active]="activeKind() === k.key" (click)="activeKind.set(k.key)">
+          {{ k.label }}
+        </button>
+      }
+    </div>
+  </div>
 
-    <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-      <td mat-cell *matCellDef="let row">
-        <div class="name-cell">
-          <span class="row-name">{{ row.name }}</span>
-          <span class="row-meta">
-            @if (row.kind === 'series') {
-              <span class="kind-chip series">Series · {{ row.eventCount }} events</span>
-            } @else {
-              <span class="kind-chip event">Event</span>
-            }
-            <span class="row-id">ID: {{ row.id }}</span>
+  <hr class="ev-divider" />
+
+  <!-- Filters row -->
+  <div class="ev-filters">
+    <div class="ev-search">
+      <mat-icon class="ev-search-ico">Magnifying Glass</mat-icon>
+      <input
+        type="text"
+        placeholder="Search by Name, ID or venue"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)" />
+    </div>
+
+    <button class="ev-filter-chip" [matMenuTriggerFor]="statusMenu">
+      {{ statusFilter() === 'all' ? 'All Status' : statusFilter() }}
+      <mat-icon>Tailless Line Arrow Down 1</mat-icon>
+    </button>
+    <mat-menu #statusMenu="matMenu">
+      <button mat-menu-item (click)="statusFilter.set('all')">All Status</button>
+      @for (s of statusOptions; track s) {
+        <button mat-menu-item (click)="statusFilter.set(s)">{{ s }}</button>
+      }
+    </mat-menu>
+
+    <button class="ev-filter-chip" [matMenuTriggerFor]="datesMenu">
+      All Dates
+      <mat-icon>Tailless Line Arrow Down 1</mat-icon>
+    </button>
+    <mat-menu #datesMenu="matMenu">
+      <button mat-menu-item>All Dates</button>
+      <button mat-menu-item>This week</button>
+      <button mat-menu-item>This month</button>
+    </mat-menu>
+
+    <button class="ev-filter-chip">
+      Date
+      <mat-icon>Tailless Line Arrow Down 1</mat-icon>
+    </button>
+
+    <div class="ev-view-toggle" role="group" aria-label="View mode">
+      <button
+        class="ev-view-toggle-btn"
+        [class.active]="viewMode() === 'cards'"
+        (click)="viewMode.set('cards')"
+        type="button"
+        matTooltip="Card view"
+        aria-label="Show as cards">
+        <mat-icon>Dashboard Square</mat-icon>
+      </button>
+      <button
+        class="ev-view-toggle-btn"
+        [class.active]="viewMode() === 'table'"
+        (click)="viewMode.set('table')"
+        type="button"
+        matTooltip="Table view"
+        aria-label="Show as table">
+        <mat-icon>Hamburger Menu 1</mat-icon>
+      </button>
+    </div>
+
+    <div class="ev-multi-edit">
+      <span>Multi edit</span>
+      <button
+        class="ev-toggle"
+        [class.on]="multiEdit()"
+        (click)="multiEdit.update(v => !v)"
+        type="button">
+        <span class="ev-toggle-knob"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk action bar (visible whenever multi edit is on) -->
+  @if (multiEdit()) {
+    <div class="ev-bulkbar">
+      <span class="ev-bulkbar-count">
+        {{ selectedCount() > 0 ? selectedCount() + ' selected' : 'Select items to edit in bulk' }}
+      </span>
+      <div class="ev-bulkbar-actions">
+        <button class="ev-bulkbar-btn" [matMenuTriggerFor]="moveMenu" [disabled]="selectedCount() === 0">
+          <mat-icon>Line Arrow Transfer Horizontal 2</mat-icon>
+          Move to series
+          <mat-icon class="ev-bulkbar-caret">Tailless Line Arrow Down 1</mat-icon>
+        </button>
+        <mat-menu #moveMenu="matMenu">
+          @for (s of moveTargets(); track s.id) {
+            <button mat-menu-item (click)="moveSelectedToSeries(s.id)">{{ s.name }}</button>
+          }
+          @if (moveTargets().length === 0) {
+            <button mat-menu-item disabled>No series yet</button>
+          }
+        </mat-menu>
+
+        <button class="ev-bulkbar-btn" (click)="duplicateSelected()" [disabled]="selectedCount() === 0">
+          <mat-icon>Copy 1</mat-icon>
+          Duplicate
+        </button>
+        <button class="ev-bulkbar-btn ev-bulkbar-btn-danger" (click)="deleteSelected()" [disabled]="selectedCount() === 0">
+          <mat-icon>Trash</mat-icon>
+          Delete
+        </button>
+        @if (selectedCount() > 0) {
+          <button class="ev-bulkbar-btn ev-bulkbar-btn-ghost" (click)="clearSelection()">Clear</button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Card list -->
+  @if (viewMode() === 'cards') {
+  <div class="ev-cards">
+    @for (row of filteredCards(); track row.id) {
+      <article class="ev-card" [class.ev-card-series]="row.kind === 'series'" [class.ev-card-selected]="multiEdit() && isSelected(row.id)" (click)="onCardClick(row)">
+        @if (multiEdit()) {
+          <mat-checkbox
+            class="ev-card-check"
+            [checked]="isSelected(row.id)"
+            (change)="toggleSelect(row.id)"
+            (click)="$event.stopPropagation()"></mat-checkbox>
+        }
+        <div class="ev-card-thumb" [style.background]="row.kind === 'series'
+              ? 'linear-gradient(135deg, #7f56d9 0%, #4b39a4 70%, #2a1547 100%)'
+              : (row.thumbnailGradient || defaultThumb)">
+          <span class="ev-thumb-badge" [class.is-series]="row.kind === 'series'">
+            <mat-icon class="ev-thumb-badge-ico">{{ row.kind === 'series' ? 'Layers 1' : 'Blank Calendar' }}</mat-icon>
+            {{ row.kind === 'series' ? 'Series' : 'Single' }}
           </span>
         </div>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="category">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
-      <td mat-cell *matCellDef="let row">{{ row.category || row.legalEntity || '—' }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="date">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
-      <td mat-cell *matCellDef="let row">{{ formatDate(row.date) }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="venue">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Venue</th>
-      <td mat-cell *matCellDef="let row">{{ row.venue || '—' }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="tickets">
-      <th mat-header-cell *matHeaderCellDef>Tickets</th>
-      <td mat-cell *matCellDef="let row">
-        @if (row.totalTickets) {
-          <div class="tickets-cell">
-            <span class="t-count">{{ row.ticketsSold }} / {{ row.totalTickets }}</span>
-            <div class="t-bar">
-              <div class="t-bar-fill" [style.width.%]="(row.ticketsSold / row.totalTickets) * 100"></div>
+        <div class="ev-card-body">
+          <h3 class="ev-card-title">{{ row.name }}</h3>
+          <div class="ev-card-meta">
+            @if (row.kind === 'series') {
+              <span class="ev-card-meta-item">
+                <mat-icon class="ev-meta-ico">Layers 1</mat-icon>
+                {{ row.eventCount }} events
+              </span>
+            } @else {
+              <span class="ev-card-meta-item">
+                <mat-icon class="ev-meta-ico">Blank Calendar</mat-icon>
+                {{ formatDate(row.date) }}
+              </span>
+              @if (row.time) {
+                <span class="ev-card-meta-item">
+                  <mat-icon class="ev-meta-ico">Circle Clock</mat-icon>
+                  {{ row.time }}
+                </span>
+              }
+              <span class="ev-card-meta-item">
+                <mat-icon class="ev-meta-ico">Location Pin 1</mat-icon>
+                {{ row.venue || '—' }}
+              </span>
+            }
+          </div>
+        </div>
+        @if (row.kind !== 'series') {
+          <div class="ev-card-sales">
+            <span class="ev-card-sales-label">{{ row.ticketsSold }} / {{ row.totalTickets }} tickets</span>
+            <div class="ev-card-sales-bar">
+              <div
+                class="ev-card-sales-fill"
+                [style.width.%]="row.totalTickets ? (row.ticketsSold / row.totalTickets) * 100 : 0"></div>
             </div>
           </div>
         } @else {
-          <span class="muted">—</span>
+          <div class="ev-card-sales ev-card-sales-empty"></div>
         }
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="revenue">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Revenue</th>
-      <td mat-cell *matCellDef="let row">{{ formatRevenue(row.revenue) }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-      <td mat-cell *matCellDef="let row">
-        <span class="status-chip" [class]="statusClass(row.status)">{{ row.status }}</span>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef class="actions-col"></th>
-      <td mat-cell *matCellDef="let row" class="actions-col">
-        <button mat-icon-button (click)="editRow(row); $event.stopPropagation()" matTooltip="Edit">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-        <mat-menu #rowMenu>
-          <button mat-menu-item (click)="editRow(row)"><mat-icon>edit</mat-icon> Edit</button>
-          <button mat-menu-item (click)="duplicateRow(row)"><mat-icon>content_copy</mat-icon> Duplicate</button>
-          <button mat-menu-item><mat-icon>visibility</mat-icon> View</button>
-          <button mat-menu-item (click)="deleteRow(row)"><mat-icon>delete</mat-icon> Delete</button>
-        </mat-menu>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="data-row" (click)="editRow(row)"></tr>
-
-    <tr class="mat-row no-data-row" *matNoDataRow>
-      <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-        <div class="empty-state">
-          <mat-icon>event_busy</mat-icon>
-          <p>No events match your filters.</p>
+        <div class="ev-card-status">
+          <span class="ev-chip" [class]="'ev-chip-' + chipVariant(row.status)">
+            <mat-icon class="ev-chip-ico">{{ chipIcon(row.status) }}</mat-icon>
+            {{ chipLabel(row.status) }}
+          </span>
         </div>
-      </td>
-    </tr>
-  </table>
+        <div class="ev-card-price">
+          @if (row.kind === 'series') {
+            <div class="ev-card-actions">
+              <button class="ev-icon-btn" (click)="openShare(row, $event)" matTooltip="Share with organizers" aria-label="Share with organizers">
+                <mat-icon>User Group</mat-icon>
+              </button>
+              <button class="ev-tickets-btn" (click)="openSeriesDetail(row, $event)">Open</button>
+            </div>
+          } @else {
+            <span class="ev-card-price-value">€{{ row.priceFrom || 0 }}</span>
+            <div class="ev-card-actions">
+              <button class="ev-icon-btn" (click)="openPublicShare(row, $event)" matTooltip="Share public event link" aria-label="Share event link">
+                <mat-icon>Link Share 2</mat-icon>
+              </button>
+              <button class="ev-tickets-btn" (click)="openTickets(row, $event)">
+                <mat-icon>Ticket</mat-icon> Sales overview
+              </button>
+            </div>
+          }
+        </div>
+        <button
+          class="ev-card-dots"
+          [matMenuTriggerFor]="rowMenu"
+          (click)="$event.stopPropagation()"
+          aria-label="More actions">
+          <mat-icon>Vertical Menu</mat-icon>
+        </button>
+        <mat-menu #rowMenu="matMenu">
+          <button mat-menu-item (click)="editRowMenu(row)"><mat-icon>Pencil</mat-icon> Edit</button>
+          @if (row.kind !== 'series') {
+            <button mat-menu-item (click)="openTickets(row, $event)"><mat-icon>Ticket</mat-icon> Sales overview</button>
+            <button mat-menu-item (click)="openPublicShare(row, $event)"><mat-icon>Link Share 2</mat-icon> Share event link</button>
+          } @else {
+            <button mat-menu-item (click)="openShare(row, $event)"><mat-icon>User Group</mat-icon> Share with organizers</button>
+          }
+          <button mat-menu-item (click)="duplicateRow(row)"><mat-icon>Copy 1</mat-icon> Duplicate</button>
+          <button mat-menu-item><mat-icon>Visible</mat-icon> View</button>
+          <button mat-menu-item (click)="deleteRow(row)"><mat-icon>Trash</mat-icon> Delete</button>
+        </mat-menu>
+      </article>
+    }
 
-  <mat-paginator
-    [pageSizeOptions]="[10, 25, 50]"
-    [pageSize]="10"
-    showFirstLastButtons></mat-paginator>
-</div>
+    @if (filteredCards().length === 0) {
+      <div class="ev-empty">
+        <mat-icon>Blank Calendar</mat-icon>
+        <p>No events match your filters.</p>
+      </div>
+    }
+  </div>
+  } @else {
+    <!-- Table list -->
+    <div class="ev-table-wrap">
+      <table class="ev-table">
+        <thead>
+          <tr>
+            @if (multiEdit()) { <th class="ev-th-check"></th> }
+            <th class="ev-th-type">Type</th>
+            <th class="ev-th-name">Name</th>
+            <th>Date</th>
+            <th>Venue</th>
+            <th>Status</th>
+            <th class="ev-th-num">Tickets</th>
+            <th class="ev-th-num">Revenue</th>
+            <th class="ev-th-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of filteredCards(); track row.id) {
+            <tr [class.ev-tr-selected]="multiEdit() && isSelected(row.id)" (click)="onCardClick(row)">
+              @if (multiEdit()) {
+                <td class="ev-td-check" (click)="$event.stopPropagation()">
+                  <mat-checkbox [checked]="isSelected(row.id)" (change)="toggleSelect(row.id)"></mat-checkbox>
+                </td>
+              }
+              <td>
+                <span class="ev-type-pill" [class.is-series]="row.kind === 'series'">
+                  <mat-icon class="ev-type-pill-ico">{{ row.kind === 'series' ? 'Layers 1' : 'Blank Calendar' }}</mat-icon>
+                  {{ row.kind === 'series' ? 'Series' : 'Single' }}
+                </span>
+              </td>
+              <td class="ev-td-name-cell">
+                <span
+                  class="ev-td-swatch"
+                  [style.background]="row.kind === 'series'
+                    ? 'linear-gradient(135deg, #7f56d9 0%, #4b39a4 70%, #2a1547 100%)'
+                    : (row.thumbnailGradient || defaultThumb)">
+                </span>
+                <div class="ev-td-name-body">
+                  <strong class="ev-td-name">{{ row.name }}</strong>
+                  @if (row.kind === 'series') {
+                    <span class="ev-td-sub">{{ row.eventCount }} event{{ row.eventCount === 1 ? '' : 's' }}</span>
+                  }
+                </div>
+              </td>
+              <td>{{ formatDate(row.date) }}</td>
+              <td>{{ row.venue || '—' }}</td>
+              <td>
+                <span class="ev-chip" [class]="'ev-chip-' + chipVariant(row.status)">
+                  <mat-icon class="ev-chip-ico">{{ chipIcon(row.status) }}</mat-icon>
+                  {{ chipLabel(row.status) }}
+                </span>
+              </td>
+              <td class="ev-td-num">
+                @if (row.kind === 'series') { — } @else {
+                  {{ row.ticketsSold }} / {{ row.totalTickets }}
+                }
+              </td>
+              <td class="ev-td-num">
+                @if (row.kind === 'series') { — } @else {
+                  €{{ row.revenue | number:'1.0-0':'en-GB' }}
+                }
+              </td>
+              <td class="ev-td-actions" (click)="$event.stopPropagation()">
+                <button class="ev-icon-btn" [matMenuTriggerFor]="rowTblMenu" aria-label="More actions">
+                  <mat-icon>Vertical Menu</mat-icon>
+                </button>
+                <mat-menu #rowTblMenu="matMenu">
+                  <button mat-menu-item (click)="editRowMenu(row)"><mat-icon>Pencil</mat-icon> Edit</button>
+                  @if (row.kind !== 'series') {
+                    <button mat-menu-item (click)="openTickets(row, $event)"><mat-icon>Ticket</mat-icon> Sales overview</button>
+                    <button mat-menu-item (click)="openPublicShare(row, $event)"><mat-icon>Link Share 2</mat-icon> Share event link</button>
+                  } @else {
+                    <button mat-menu-item (click)="openShare(row, $event)"><mat-icon>User Group</mat-icon> Share with organizers</button>
+                  }
+                  <button mat-menu-item (click)="duplicateRow(row)"><mat-icon>Copy 1</mat-icon> Duplicate</button>
+                  <button mat-menu-item (click)="deleteRow(row)"><mat-icon>Trash</mat-icon> Delete</button>
+                </mat-menu>
+              </td>
+            </tr>
+          }
+          @if (filteredCards().length === 0) {
+            <tr>
+              <td [attr.colspan]="multiEdit() ? 9 : 8" class="ev-table-empty">No events match your filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

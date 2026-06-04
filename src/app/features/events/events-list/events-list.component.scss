@@ -1,254 +1,897 @@
-:host { display: block; }
+:host {
+  display: block;
+  padding: 24px 32px 48px;
+  background: #fff;
+  font-family: Mulish, sans-serif;
+  color: #11002b;
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  gap: 16px;
+  /* Local tokens drawn from Figma node 561:24351 */
+  --ev-fg: #11002b;
+  --ev-fg-muted: #6d5f79;
+  --ev-stroke: #e9e7ed;
+  --ev-stroke-soft: #efefef;
+  --ev-surface-soft: #f8f7f9;
+  --ev-surface-tint: #f4f2f5;
+  --ev-brand: #06d373;
+  --ev-brand-dark: #04a85b;
+  --ev-success-bg: #ddfbea;
+  --ev-success-fg: #19633d;
+  --ev-warning-bg: #fffac1;
+  --ev-warning-fg: #a76002;
+  --ev-error-bg: #fcd8da;
+  --ev-error-fg: #b3261e;
+  --ev-purple-track: #f4ebff;
+  --ev-purple-fill: #7f56d9;
 }
 
-.page-title {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0 0 4px;
-  font-family: Mulish, sans-serif;
+/* ---------- Page header ---------- */
+.ev-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.ev-header-text h1 {
+  font-family: 'Panel Sans', Mulish, sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 40px;
+  margin: 0 0 8px;
+  color: #002b1a;
   letter-spacing: -0.2px;
 }
-
-.page-subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
+.ev-header-text p {
   margin: 0;
-  font-family: Mulish, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--ev-fg-muted);
 }
 
-.create-btn {
-  height: 44px !important;
-  padding: 0 20px !important;
-  font-weight: 600;
-  letter-spacing: 0.1px;
-
-  mat-icon {
-    margin-right: 4px;
-  }
-}
-
-.status-tabs {
-  margin-bottom: 16px;
-
-  ::ng-deep .mat-mdc-tab-labels {
-    border-bottom: 1px solid var(--stroke-default);
-  }
-
-  ::ng-deep .mdc-tab__text-label {
-    font-family: Mulish, sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    color: var(--text-muted);
-  }
-
-  ::ng-deep .mdc-tab--active .mdc-tab__text-label {
-    color: var(--text-primary) !important;
-  }
-}
-
-.filters-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-  align-items: flex-start;
-}
-
-.search-field {
-  flex: 1 1 320px;
-}
-
-.type-field {
-  width: 160px;
-  flex-shrink: 0;
-}
-
-.venue-field {
-  width: 220px;
-  flex-shrink: 0;
-}
-
-::ng-deep .mat-mdc-form-field-subscript-wrapper {
-  display: none;
-}
-
-.bulk-bar {
-  display: flex;
+.ev-create-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: #f8f8fa;
-  border: 1px solid var(--stroke-default);
-  border-radius: var(--radius-md);
-  margin-bottom: 12px;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--ev-brand);
+  border: 1px solid var(--ev-brand);
+  border-radius: 9999px;
+  font: 700 14px/20px Mulish, sans-serif;
+  color: #002b1a;
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--ev-brand-dark); }
+
+  .ev-create-arrow {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #002b1a;
+  }
 }
 
-.bulk-count {
+/* ---------- KPI cards ---------- */
+.ev-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ev-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 12px;
+}
+
+.ev-kpi-label {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-right: 8px;
+  line-height: 20px;
+  color: var(--ev-fg-muted);
+  font-weight: 500;
+}
+.ev-kpi-value {
+  font-family: 'Panel Sans', Mulish, sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 36px;
+  color: var(--ev-fg);
+  letter-spacing: -0.4px;
 }
 
-.table-wrap {
-  background: var(--bg-surface);
-  border: 1px solid var(--stroke-default);
-  border-radius: var(--radius-lg);
+/* ---------- Panel ---------- */
+.ev-panel {
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 16px;
   overflow: hidden;
 }
 
-table.mat-mdc-table {
-  width: 100%;
-  background: transparent;
-}
-
-::ng-deep .mat-mdc-header-cell {
-  background: var(--bg-subtle);
-  color: var(--text-muted) !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  padding: 12px 16px !important;
-}
-
-::ng-deep .mat-mdc-cell {
-  font-size: 14px;
-  color: var(--text-primary);
-  padding: 14px 16px !important;
-  font-family: Mulish, sans-serif;
-}
-
-.data-row {
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.data-row:hover {
-  background: var(--bg-hover);
-}
-
-.name-cell {
+/* ---------- Tab pills ---------- */
+.ev-tabs-row {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-width: 320px;
-}
-
-.row-name {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--text-primary);
-  line-height: 1.3;
-}
-
-.row-meta {
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 12px 24px;
+  padding: 16px 24px;
+}
+.ev-tabs {
+  display: flex;
   gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
+}
+.ev-tabs-kind {
+  padding-left: 16px;
+  border-left: 1px solid var(--ev-stroke);
 }
 
-.kind-chip {
+.ev-tab {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  font-size: 10px;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--ev-stroke);
+  background: #fff;
+  border-radius: 8px;
+  font: 500 13px/20px Mulish, sans-serif;
+  color: var(--ev-fg);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+
+  &:hover { background: var(--ev-surface-soft); }
+
+  &.active {
+    background: var(--ev-fg);
+    color: #fff;
+    border-color: var(--ev-fg);
+
+    .ev-tab-count {
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+    }
+  }
+}
+
+.ev-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 6px;
+  background: var(--ev-surface-tint);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ev-fg-muted);
+}
+
+.ev-divider {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--ev-stroke);
+}
+
+/* ---------- Filters row ---------- */
+.ev-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+.ev-search {
+  position: relative;
+  flex: 0 1 360px;
+  display: flex;
+  align-items: center;
+
+  .ev-search-ico {
+    position: absolute;
+    left: 12px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--ev-fg-muted);
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px 0 38px;
+    background: #fff;
+    border: 1px solid var(--ev-stroke);
+    border-radius: 8px;
+    font: 400 14px/20px Mulish, sans-serif;
+    color: var(--ev-fg);
+    outline: none;
+    transition: border-color 120ms ease;
+
+    &::placeholder { color: var(--ev-fg-muted); }
+    &:focus { border-color: var(--ev-fg); }
+  }
+}
+
+.ev-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px 0 14px;
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 8px;
+  font: 500 14px/20px Mulish, sans-serif;
+  color: var(--ev-fg);
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--ev-surface-soft); }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--ev-fg-muted);
+  }
+}
+
+.ev-multi-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 13px/20px Mulish, sans-serif;
+  color: var(--ev-fg-muted);
+}
+
+/* Cards / Table view toggle — placed before .ev-multi-edit. The auto-margin
+   here pushes the toggle (and the multi-edit group that follows) to the
+   right edge of the filters row. */
+.ev-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 2px;
+  background: var(--ev-stroke);
+  border-radius: 8px;
+}
+.ev-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ev-fg-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+
+  &:hover { color: var(--ev-fg); }
+  &.active {
+    background: #fff;
+    color: var(--ev-fg);
+    box-shadow: 0 1px 2px rgba(17, 0, 43, 0.08);
+  }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+/* ===== Table view ===== */
+.ev-table-wrap {
+  margin-top: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 12px;
+  background: #fff;
+}
+.ev-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 13px/18px Mulish, sans-serif;
+
+  thead th {
+    text-align: left;
+    padding: 12px 14px;
+    font-weight: 700;
+    color: var(--ev-fg-muted);
+    background: #fafaff;
+    border-bottom: 1px solid var(--ev-stroke);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--ev-stroke);
+    vertical-align: middle;
+    color: var(--ev-fg);
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 100ms ease;
+
+    &:hover { background: #fafaff; }
+    &.ev-tr-selected { background: #f1ebfb; }
+    &:last-child td { border-bottom: 0; }
+  }
+}
+.ev-th-num, .ev-td-num { text-align: right; white-space: nowrap; }
+.ev-th-actions, .ev-td-actions { width: 44px; text-align: right; }
+.ev-th-check, .ev-td-check { width: 36px; }
+.ev-th-type { width: 96px; }
+.ev-th-name { width: 28%; }
+
+/* Name cell: small color swatch + stacked name/sub-line, gives single events
+   their thumbnail identity in the otherwise-text-only table. */
+.ev-td-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ev-td-swatch {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #5a1212, #2b0606);
+}
+.ev-td-name-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ev-td-name {
   font-weight: 700;
+  color: var(--ev-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ev-td-sub {
+  font: 400 12px/16px Mulish, sans-serif;
+  color: var(--ev-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Type pill — Single (lighter) vs Series (darker). Background matches the
+   chip-purple family so the column reads as a category badge, not as text. */
+.ev-type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px 0 8px;
+  border-radius: 9999px;
+  background: #f1ebfb;
+  color: #4b39a4;
+  font: 700 11px/24px Mulish, sans-serif;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+
+  &.is-series {
+    background: #4b39a4;
+    color: #fff;
+  }
+}
+.ev-type-pill-ico {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.ev-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ev-fg-muted);
+  cursor: pointer;
+
+  &:hover { background: var(--ev-stroke); color: var(--ev-fg); }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.ev-table-empty {
+  text-align: center;
+  padding: 32px 14px !important;
+  color: var(--ev-fg-muted);
+  font-style: italic;
+}
+
+.ev-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  background: var(--ev-stroke);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 160ms ease;
+
+  &.on { background: var(--ev-brand); }
+
+  .ev-toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 160ms ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  &.on .ev-toggle-knob { transform: translateX(16px); }
+}
+
+/* ---------- Bulk action bar ---------- */
+.ev-bulkbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: var(--ev-surface-soft);
+  border: 1px solid var(--ev-stroke);
+  border-radius: 12px;
+  color: var(--ev-fg);
+}
+.ev-bulkbar-count { font: 700 13px/18px Mulish, sans-serif; color: var(--ev-fg); }
+.ev-bulkbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ev-bulkbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 8px;
+  font: 600 13px/18px Mulish, sans-serif;
+  color: var(--ev-fg);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+
+  &:hover { background: var(--ev-surface-tint); }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--ev-fg-muted); }
+  .ev-bulkbar-caret { font-size: 14px; width: 14px; height: 14px; }
+
+  &.ev-bulkbar-btn-danger {
+    border-color: #f3c2c4;
+    color: var(--ev-error-fg);
+    mat-icon { color: var(--ev-error-fg); }
+    &:hover { background: #fdecea; }
+  }
+  &.ev-bulkbar-btn-ghost { background: transparent; border-color: transparent; }
+  &.ev-bulkbar-btn-ghost:hover { background: var(--ev-surface-tint); }
+  &:disabled { opacity: .45; cursor: not-allowed; }
+  &:disabled:hover { background: #fff; }
+}
+
+/* ---------- Cards ---------- */
+.ev-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 24px 28px;
+}
+
+.ev-card {
+  position: relative;
+  display: grid;
+  /* Price column widened from 80px → 260px so €45 + Share + Sales-overview sit
+     on one row instead of stacking under the price. */
+  grid-template-columns: 134px 1fr 220px 120px 260px 40px;
+  align-items: center;
+  gap: 24px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+
+  &:hover {
+    border-color: #d8d2e0;
+    box-shadow: 0 4px 14px -6px rgba(17, 0, 43, 0.12);
+  }
+}
+
+.ev-card-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 2px solid #c2b3e0;
+  border-radius: 9px;
+  padding: 1px;
+  box-shadow: 0 2px 8px -2px rgba(17, 0, 43, 0.25);
+  transform: scale(1.0);
+  transform-origin: top left;
+  transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  --mdc-checkbox-selected-icon-color: #7f56d9;
+  --mdc-checkbox-selected-focus-icon-color: #7f56d9;
+  --mdc-checkbox-selected-hover-icon-color: #7f56d9;
+  --mdc-checkbox-selected-pressed-icon-color: #7f56d9;
+}
+
+.ev-card-selected {
+  border-color: #7f56d9;
+  background: #faf8ff;
+  box-shadow: 0 0 0 2px rgba(127, 86, 217, 0.4), 0 4px 14px -6px rgba(17, 0, 43, 0.18);
+
+  .ev-card-check {
+    border-color: #7f56d9;
+    background: #f4ebff;
+    box-shadow: 0 2px 12px -2px rgba(127, 86, 217, 0.5);
+  }
+}
+
+.ev-card-series {
+  border-color: #d6c9ea;
+
+  &:hover { border-color: #b9a3df; }
+}
+
+.ev-thumb-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 9999px;
+  font: 700 10px/14px Mulish, sans-serif;
   letter-spacing: 0.3px;
   text-transform: uppercase;
+  color: #11002b;
 
-  &.event {
-    background: var(--brand-primary);
+  /* Series gets the bolder dark fill, Single keeps the lighter neutral.
+     Mirrors the table's Type pill emphasis. */
+  &.is-series {
+    background: #4b39a4;
     color: #fff;
   }
 
-  &.series {
-    background: var(--brand-secondary);
-    color: var(--brand-primary);
+  .ev-thumb-badge-ico {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
   }
 }
 
-.row-id {
-  color: var(--text-muted);
-  font-size: 11px;
+
+.ev-card-sales-empty {
+  /* keep grid column shape stable when sales bar is hidden on series rows */
+  visibility: hidden;
 }
 
-.tickets-cell {
+.ev-card-thumb {
+  width: 134px;
+  height: 70px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #5a1212, #2b0606);
+
+  .ev-thumb-mark {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    color: rgba(255,255,255,0.75);
+    font-size: 16px;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 8px 6px 10px;
+    height: 10px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
+    border-radius: 2px;
+  }
+}
+
+.ev-card-body {
+  min-width: 0;
+
+  .ev-card-title {
+    /* No clamp — long event names wrap naturally so the full name is always visible. */
+    margin: 0 0 10px;
+    font: 700 16px/22px Mulish, sans-serif;
+    color: var(--ev-fg);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
+.ev-card-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Each piece of meta (date, time, venue) is its own subtle pill so they read
+   as distinct facts at a glance instead of running together as one text blob. */
+.ev-card-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--ev-surface-tint);
+  font: 600 12px/24px Mulish, sans-serif;
+  color: var(--ev-fg);
+  white-space: nowrap;
+
+  .ev-meta-ico {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--ev-fg-muted);
+  }
+}
+
+.ev-card-sales {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 120px;
+  gap: 6px;
+  min-width: 0;
 }
 
-.t-count {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 600;
+.ev-card-sales-label {
+  font: 500 12px/16px Mulish, sans-serif;
+  color: var(--ev-fg-muted);
 }
 
-.t-bar {
-  height: 4px;
-  background: var(--stroke-default);
-  border-radius: var(--radius-pill);
+.ev-card-sales-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--ev-purple-track);
+  border-radius: 9999px;
   overflow: hidden;
 }
 
-.t-bar-fill {
+.ev-card-sales-fill {
   height: 100%;
-  background: var(--brand-secondary);
-  transition: width 0.3s ease;
+  background: var(--ev-purple-fill);
+  border-radius: 9999px;
+  transition: width 200ms ease;
 }
 
-.muted {
-  color: var(--text-muted);
+.ev-card-status {
+  display: flex;
+  justify-content: flex-start;
 }
 
-.actions-col {
-  width: 100px;
+.ev-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font: 500 11px/16px Mulish, sans-serif;
+  white-space: nowrap;
+
+  .ev-chip-ico {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.ev-chip-success {
+  background: var(--ev-success-bg);
+  color: var(--ev-success-fg);
+}
+
+.ev-chip-warning {
+  background: var(--ev-warning-bg);
+  color: var(--ev-warning-fg);
+}
+
+.ev-chip-error {
+  background: var(--ev-error-bg);
+  color: var(--ev-error-fg);
+}
+
+.ev-chip-muted {
+  background: var(--ev-surface-tint);
+  color: var(--ev-fg-muted);
+}
+
+.ev-card-price {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.ev-card-price-value {
+  display: inline-block;
+  font: 700 20px/24px Mulish, sans-serif;
+  color: var(--ev-fg);
   text-align: right;
 }
 
-.no-data-row .mat-cell {
-  text-align: center;
-  padding: 48px 24px;
+.ev-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.empty-state {
+.ev-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 8px;
+  color: var(--ev-fg);
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--ev-surface-soft); }
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: var(--ev-fg-muted); }
+}
+
+.ev-tickets-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 8px;
+  font: 600 12px/16px Mulish, sans-serif;
+  color: var(--ev-fg);
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--ev-surface-soft); }
+  mat-icon { font-size: 14px; width: 14px; height: 14px; color: var(--ev-fg-muted); }
+}
+
+.ev-card-dots {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid var(--ev-stroke);
+  border-radius: 8px;
+  color: var(--ev-fg);
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--ev-surface-soft); }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ---------- Empty ---------- */
+.ev-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: var(--text-muted);
+  padding: 48px 0;
+  color: var(--ev-fg-muted);
 
   mat-icon {
     font-size: 40px;
     width: 40px;
     height: 40px;
-    color: var(--stroke-strong);
+    color: #c1b9cc;
   }
 
-  p {
-    margin: 0;
-    font-size: 14px;
+  p { margin: 0; font-size: 14px; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+  .ev-card {
+    grid-template-columns: 110px 1fr 180px 40px;
+    grid-template-areas:
+      'thumb body status dots'
+      'thumb sales price dots';
+    row-gap: 8px;
+
+    .ev-card-thumb { grid-area: thumb; width: 110px; }
+    .ev-card-body { grid-area: body; }
+    .ev-card-sales { grid-area: sales; }
+    .ev-card-status { grid-area: status; }
+    .ev-card-price { grid-area: price; text-align: right; }
+    .ev-card-dots { grid-area: dots; }
   }
 }
 
-::ng-deep .mat-mdc-paginator {
-  background: transparent;
-  border-top: 1px solid var(--stroke-default);
+@media (max-width: 720px) {
+  .ev-kpis { grid-template-columns: 1fr 1fr; }
+  .ev-filters { flex-wrap: wrap; }
+  .ev-multi-edit { margin-left: 0; }
 }
 
-::ng-deep .mat-sort-header-arrow {
-  color: var(--text-muted);
+@media (max-width: 600px) {
+  :host { padding: 16px 16px 32px; }
+
+  .ev-header { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px; }
+  .ev-header-text h1 { font-size: 24px; line-height: 30px; }
+  .ev-create-btn { justify-content: center; height: 44px; }
+
+  .ev-kpis { gap: 10px; }
+  .ev-kpi { padding: 12px 14px; }
+  .ev-kpi-value { font-size: 22px; line-height: 28px; }
+
+  .ev-tabs { padding: 12px; flex-wrap: wrap; }
+  .ev-filters { padding: 12px; }
+  .ev-search { flex: 1 1 100%; }
+  .ev-filter-chip { flex: 1 1 auto; justify-content: space-between; }
+
+  .ev-cards { padding: 4px 12px 20px; gap: 12px; }
+
+  /* Stack card content vertically on phones */
+  .ev-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'thumb'
+      'body'
+      'sales'
+      'status'
+      'price';
+    gap: 12px;
+    padding: 14px;
+
+    .ev-card-thumb { grid-area: thumb; width: 100%; height: 120px; }
+    .ev-card-body { grid-area: body; }
+    .ev-card-sales { grid-area: sales; }
+    .ev-card-status { grid-area: status; }
+    .ev-card-price { grid-area: price; text-align: left; }
+    .ev-card-price-value { text-align: left; }
+  }
+
+  .ev-card-dots { position: absolute; top: 12px; right: 12px; }
 }

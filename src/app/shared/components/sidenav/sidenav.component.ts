@@ -90,10 +90,10 @@ interface NavSection {
           </div>
           <div class="topbar-right">
             <button mat-icon-button>
-              <mat-icon>notifications_none</mat-icon>
+              <mat-icon>Ringing Bell Notification</mat-icon>
             </button>
             <button mat-icon-button>
-              <mat-icon>help_outline</mat-icon>
+              <mat-icon>Information Circle</mat-icon>
             </button>
           </div>
         </mat-toolbar>
@@ -296,12 +296,12 @@ export class SidenavComponent {
     {
       label: 'Events & Series',
       items: [
-        { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
-        { label: 'Single Events & Series', icon: 'calendar_today', route: '/events' },
-        { label: 'Create new event', icon: 'add_circle_outline', route: '/events/create' },
-        { label: 'Collections', icon: 'folder_open', route: '/collections' },
-        { label: 'Programme of all events', icon: 'event_note', route: '/programme' },
-        { label: 'Add-ons Configuration', icon: 'extension', route: '/addons' },
+        { label: 'Dashboard', icon: 'Dashboard 3', route: '/dashboard' },
+        { label: 'Series & Events', icon: 'Blank Calendar', route: '/events' },
+        { label: 'Create new event', icon: 'Add 1', route: '/events/create' },
+        { label: 'Collections', icon: 'Folder', route: '/collections' },
+        { label: 'Programme of all events', icon: 'Calendar Check', route: '/programme' },
+        { label: 'Add-ons Configuration', icon: 'Dashboard Square', route: '/addons' },
       ]
     }
   ];

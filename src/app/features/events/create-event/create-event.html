@@ -1,1 +1,693 @@
-<p>create-event works!</p>
+<div class="ce-shell" [class.ce-nav-open]="sidebarOpen()">
+
+  @if (sidebarOpen()) {
+    <div class="ce-nav-backdrop" (click)="closeSidebar()"></div>
+  }
+
+  <!-- ===== Left side nav ===== -->
+  <aside class="ce-sidebar" [class.open]="sidebarOpen()">
+    <div class="ce-sidebar-head">
+      Editing event
+      <button class="ce-nav-close" (click)="closeSidebar()" aria-label="Close menu"><mat-icon>Delete 1</mat-icon></button>
+    </div>
+
+    <nav class="ce-nav">
+      <button
+        class="ce-nav-item ce-nav-group"
+        [class.active]="activeGroup() === 'details'"
+        (click)="activeGroup.set(activeGroup() === 'details' ? null : 'details')">
+        <mat-icon class="ce-nav-ico">Calendar Check</mat-icon>
+        Event Details
+        <mat-icon class="ce-nav-caret">{{ activeGroup() === 'details' ? 'Tailless Line Arrow Down 1' : 'Tailless Line Arrow Right 1' }}</mat-icon>
+      </button>
+      @if (activeGroup() === 'details') {
+        <div class="ce-nav-sub">
+          @for (s of detailSections; track s.key) {
+            <button
+              class="ce-nav-sub-item"
+              [class.active]="activeSection() === s.key"
+              (click)="scrollTo(s.key)">
+              <mat-icon class="ce-nav-sub-ico">{{ s.icon }}</mat-icon>
+              {{ s.label }}
+            </button>
+          }
+        </div>
+      }
+
+      <button
+        class="ce-nav-item ce-nav-group"
+        [class.active]="mode() === 'tickets'"
+        (click)="activeGroup.set(activeGroup() === 'tickets' ? null : 'tickets'); selectStep('tickets')">
+        <mat-icon class="ce-nav-ico">Ticket</mat-icon>
+        Tickets
+        <mat-icon class="ce-nav-caret">{{ activeGroup() === 'tickets' ? 'Tailless Line Arrow Down 1' : 'Tailless Line Arrow Right 1' }}</mat-icon>
+      </button>
+      @if (activeGroup() === 'tickets') {
+        <div class="ce-nav-sub">
+          @for (t of ticketSections; track t.key) {
+            <button class="ce-nav-sub-item" (click)="scrollToTicket(t.key)">
+              <mat-icon class="ce-nav-sub-ico">{{ t.icon }}</mat-icon>
+              {{ t.label }}
+            </button>
+          }
+        </div>
+      }
+
+      <button class="ce-nav-item" [class.active]="mode() === 'extras'" (click)="selectStep('extras')">
+        <mat-icon class="ce-nav-ico">Dashboard Square</mat-icon>
+        Extras
+        <mat-icon class="ce-nav-caret">Tailless Line Arrow Right 1</mat-icon>
+      </button>
+      <button class="ce-nav-item" [class.active]="mode() === 'summary'" (click)="selectStep('summary')">
+        <mat-icon class="ce-nav-ico">Text File</mat-icon>
+        Summary
+        <mat-icon class="ce-nav-caret">Tailless Line Arrow Right 1</mat-icon>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ===== Main column ===== -->
+  <main class="ce-main">
+
+    <!-- Series link bar — lets a standalone event flow opt into a series at any time -->
+    <div class="ce-series-bar" [class.linked]="parentSeries()">
+      <mat-icon class="ce-series-bar-ico">Link Chain</mat-icon>
+      @if (parentSeries(); as ps) {
+        <span class="ce-series-bar-label">Part of series</span>
+        <select class="ce-series-bar-select" [ngModel]="seriesIdHint()" (ngModelChange)="connectToSeries($event)">
+          @for (s of allSeries(); track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+          }
+        </select>
+        <button class="ce-series-bar-btn" (click)="disconnectFromSeries()" title="Disconnect from series">
+          <mat-icon>Delete 1</mat-icon>
+          Disconnect
+        </button>
+      } @else {
+        <span class="ce-series-bar-label">Standalone event</span>
+        <select class="ce-series-bar-select" [ngModel]="seriesIdHint()" (ngModelChange)="connectToSeries($event)">
+          <option value="">Connect to a series…</option>
+          @for (s of allSeries(); track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+          }
+        </select>
+        <span class="ce-series-bar-hint">Optional — link this event so it inherits series-level fields.</span>
+      }
+    </div>
+
+    <!-- Top bar -->
+    <header class="ce-topbar">
+      <button class="ce-burger" (click)="toggleSidebar()" aria-label="Open sections menu">
+        <mat-icon>Hamburger Menu 1</mat-icon>
+      </button>
+      <div class="ce-topbar-text">
+        <span class="ce-chip ce-chip-warning">
+          <mat-icon class="ce-chip-ico">Circle Clock</mat-icon>
+          Scheduled
+        </span>
+        <h1 class="ce-title">{{ eventName() }}</h1>
+        <div class="ce-meta">
+          <span><mat-icon class="ce-meta-ico">Blank Calendar</mat-icon> {{ formatDate(eventDate()) }}</span>
+          <span><mat-icon class="ce-meta-ico">Location Pin 1</mat-icon> {{ venue() }}</span>
+        </div>
+      </div>
+
+      <div class="ce-topbar-actions">
+        <button class="ce-btn ce-btn-primary" (click)="publish()">
+          <mat-icon>Double Tailless Line Arrow Up</mat-icon>
+          Publish
+        </button>
+        <button class="ce-btn ce-btn-ghost">
+          <mat-icon>Pencil</mat-icon>
+          Edit
+        </button>
+        <button class="ce-btn ce-btn-ghost" (click)="share()">
+          <mat-icon>Link Share 2</mat-icon>
+          Share
+        </button>
+        <button class="ce-btn ce-btn-icon" [matMenuTriggerFor]="moreMenu">
+          <mat-icon>Vertical Menu</mat-icon>
+        </button>
+        <mat-menu #moreMenu="matMenu">
+          <button mat-menu-item><mat-icon>Copy 1</mat-icon> Duplicate</button>
+          <button mat-menu-item><mat-icon>Archive Box</mat-icon> Archive</button>
+          <button mat-menu-item><mat-icon>Trash</mat-icon> Delete</button>
+        </mat-menu>
+        <div class="ce-avatars">
+          <span class="ce-avatar ce-avatar-1">K</span>
+          <span class="ce-avatar ce-avatar-2">M</span>
+          <span class="ce-avatar ce-avatar-3">J</span>
+          <span class="ce-avatar-more">+1</span>
+        </div>
+        <button class="ce-btn ce-btn-icon ce-btn-close" (click)="close()">
+          <mat-icon>Delete 1</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable form body -->
+    <div class="ce-form" #ceForm (scroll)="onFormScroll(ceForm)">
+
+      @if (mode() === 'details') {
+      <!-- Section: Event Name -->
+      <section class="ce-section" id="sec-name">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>Text Style</mat-icon> Event Name</h2>
+            <p>The public-facing name shown on the ticket page</p>
+          </div>
+          @if (parentSeries()) {
+            <label class="ce-sync">
+              Sync with series
+              <span class="ce-toggle" [class.on]="syncName()" [class.hint]="isSyncedName()" (click)="requestSyncToggle('name')">
+                <span class="ce-toggle-knob"></span>
+              </span>
+            </label>
+          }
+        </div>
+
+        @if (isSyncedName()) {
+          <p class="ce-help" style="margin-bottom: 10px;">
+            <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+            — turn off "Sync with series" to translate this event's name.
+          </p>
+        }
+        <div [class.ce-locked]="isSyncedName()">
+          <app-translations-field
+            [fields]="nameFields"
+            [languages]="languages"
+            [baseLang]="baseLang"
+            [disabled]="isSyncedName()"
+            [values]="nameValues()"
+            (valuesChange)="onNameValuesChange($event)" />
+        </div>
+        @if (isSyncedName()) {
+          <span class="ce-locked-hint"><mat-icon>Link Chain</mat-icon> Locked to series — click the toggle to edit</span>
+        }
+        <p class="ce-help">Use the “+” on a language bar to translate the name into another language side by side.</p>
+      </section>
+
+      <!-- Section: Cover Image -->
+      <section class="ce-section" id="sec-cover">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>Image</mat-icon> Cover Image</h2>
+            <p>Shown as the hero image on the public ticket page and in event cards. Use a 16:9 landscape image (1920×1080 recommended).</p>
+          </div>
+        </div>
+
+        @if (coverImageUrl()) {
+          <div class="ce-cover-preview">
+            <img [src]="coverImageUrl()" alt="Event cover preview" />
+            <div class="ce-cover-overlay">
+              <span class="ce-cover-name">{{ coverFileName() || 'cover.jpg' }}</span>
+              <div class="ce-cover-actions">
+                <label class="ce-btn ce-btn-ghost">
+                  <mat-icon>Pencil</mat-icon>
+                  Replace
+                  <input type="file" accept="image/*" hidden (change)="onCoverFileSelected($event)" />
+                </label>
+                <button class="ce-btn ce-btn-ghost" (click)="removeCover()">
+                  <mat-icon>Trash</mat-icon>
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <label class="ce-cover-empty">
+            <mat-icon class="ce-cover-empty-ico">Image</mat-icon>
+            <span class="ce-cover-empty-title">Drop an image here, or click to browse</span>
+            <span class="ce-cover-empty-hint">JPG, PNG or WebP · up to 5 MB · 16:9 recommended</span>
+            <input type="file" accept="image/*" hidden (change)="onCoverFileSelected($event)" />
+          </label>
+        }
+        @if (coverError(); as err) {
+          <p class="ce-cover-error">{{ err }}</p>
+        }
+      </section>
+
+      <!-- Section: Slug -->
+      <section class="ce-section" id="sec-slug">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>Link Chain</mat-icon> Slug</h2>
+            <p>URL-friendly identifier for this event</p>
+          </div>
+        </div>
+
+        <label class="ce-checkbox">
+          <input type="checkbox" [checked]="autoSlug()" (change)="toggleAutoSlug()" />
+          <span>Auto-generate from event name</span>
+        </label>
+
+        <span class="ce-field-label">Slug</span>
+        <input class="ce-input" type="text" [ngModel]="slug()" (ngModelChange)="onSlugInput($event)" [disabled]="autoSlug()" placeholder="summer-concert-event-new" />
+        <p class="ce-help">
+          @if (autoSlug()) {
+            Generated automatically from the event name. Uncheck to edit it manually.
+          } @else {
+            Manual slug. Each event gets a unique URL.
+          }
+        </p>
+
+        @if (parentSeries(); as ps) {
+          <div class="ce-info-banner">
+            <mat-icon class="ce-info-ico">Information Circle</mat-icon>
+            <span>
+              <strong>Series Context:</strong>
+              This event is part of <strong>"{{ ps.name }}"</strong>. Its URL lives under the series:
+              /{{ ps.slug || 'series' }}/{{ slug() || 'event' }}
+            </span>
+          </div>
+        }
+      </section>
+
+      <!-- Section: Date & Venue -->
+      <section class="ce-section" id="sec-date">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>Location Pin 1</mat-icon> Date &amp; Venue</h2>
+            <p>Changes here affect only this date</p>
+          </div>
+        </div>
+
+        <h3 class="ce-subhead"><mat-icon>Circle Clock</mat-icon> Event Date &amp; Time</h3>
+        <span class="ce-field-label"><span class="ce-req">*</span> Timezone</span>
+        <select class="ce-input" [ngModel]="timezone()" (ngModelChange)="timezone.set($event)">
+          @for (tz of timezones; track tz) { <option [value]="tz">{{ tz }}</option> }
+        </select>
+
+        <div class="ce-grid-2">
+          <div class="ce-col">
+            <span class="ce-field-label">Start Date</span>
+            <input class="ce-input" type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" />
+          </div>
+          <div class="ce-col">
+            <span class="ce-field-label">Start Time</span>
+            <input class="ce-input" type="time" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)" />
+          </div>
+          <div class="ce-col">
+            <span class="ce-field-label">End Date</span>
+            <input class="ce-input" type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" />
+          </div>
+          <div class="ce-col">
+            <span class="ce-field-label">End Time</span>
+            <input class="ce-input" type="time" [ngModel]="endTime()" (ngModelChange)="endTime.set($event)" />
+          </div>
+        </div>
+
+        <span class="ce-field-label">Doors open time</span>
+        <input class="ce-input" type="time" [ngModel]="doorsTime()" (ngModelChange)="doorsTime.set($event)" />
+
+        <h3 class="ce-subhead"><mat-icon>Location Pin 1</mat-icon> Event location</h3>
+        <span class="ce-field-label">Venue</span>
+        <div class="ce-input-suffix">
+          <input class="ce-input" type="text" [ngModel]="venue()" (ngModelChange)="venue.set($event)" />
+          <span class="ce-venue-verified"><mat-icon>Check Circle</mat-icon></span>
+        </div>
+
+        <div class="ce-map">
+          <div class="ce-map-grid"></div>
+          <div class="ce-map-pin"><mat-icon>Location Pin 1</mat-icon></div>
+          <div class="ce-map-zoom">
+            <button><mat-icon>Add 1</mat-icon></button>
+            <button><mat-icon>Block 1</mat-icon></button>
+          </div>
+          <div class="ce-map-callout">
+            <mat-icon>Location Pin 1</mat-icon>
+            <div>
+              <strong>{{ venue() || 'Venue' }}</strong>
+              <small>Paldiski mnt 104b, Tallinn</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Text blocks -->
+      <section class="ce-section" id="sec-text">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>Text File</mat-icon> Text blocks</h2>
+            <p>Each block can sync with the series independently.</p>
+          </div>
+        </div>
+
+        @for (block of textBlocks; track block.key) {
+          <div class="ce-richtext" [class.ce-locked]="syncedTextKey(block.key)">
+            <div class="ce-richtext-head">
+              <span class="ce-field-label">
+                <span class="ce-req">*</span> {{ block.label }} <span class="ce-lang-pill">English</span>
+                @if (syncedTextKey(block.key)) {
+                  <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+                }
+              </span>
+              @if (parentSeries()) {
+                <label class="ce-sync ce-sync-sm">
+                  Sync
+                  <span class="ce-toggle ce-toggle-sm" [class.on]="syncTextFlag(block.key)" [class.hint]="syncedTextKey(block.key)" (click)="requestSyncToggle($any(block.key))">
+                    <span class="ce-toggle-knob"></span>
+                  </span>
+                </label>
+              }
+            </div>
+            <div class="ce-richtext-toolbar">
+              <button>H<sub>1</sub></button>
+              <button>H<sub>2</sub></button>
+              <button>H<sub>3</sub></button>
+              <span class="ce-rt-sep"></span>
+              <button><strong>B</strong></button>
+              <button><em>I</em></button>
+              <button><u>U</u></button>
+              <span class="ce-rt-sep"></span>
+              <button><mat-icon>Text File</mat-icon></button>
+              <button><mat-icon>Text File</mat-icon></button>
+              <span class="ce-rt-sep"></span>
+              <button><mat-icon>Link Chain</mat-icon></button>
+              <button><mat-icon>Tailless Line Arrow Left 1</mat-icon></button>
+              <button><mat-icon>Tailless Line Arrow Right 1</mat-icon></button>
+            </div>
+            <textarea
+              class="ce-richtext-area"
+              rows="5"
+              [ngModel]="textBlockValue(block.key)"
+              (ngModelChange)="onTextBlockInput(block.key, $event)"
+              [disabled]="syncedTextKey(block.key)"></textarea>
+            <p class="ce-help">
+              @if (syncedTextKey(block.key)) {
+                Inherited from the series. Turn off "Sync with series" to override.
+              } @else if (block.helpText) {
+                {{ block.helpText }}
+              } @else {
+                This information will be displayed prominently at the top of the event details.
+              }
+            </p>
+          </div>
+        }
+      </section>
+
+      <!-- Section: Category -->
+      <section class="ce-section" id="sec-category">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>Dashboard Square</mat-icon> Category</h2>
+            <p>Changes here affect only this date</p>
+          </div>
+          @if (parentSeries()) {
+            <label class="ce-sync">
+              Sync with series
+              <span class="ce-toggle" [class.on]="syncCategory()" [class.hint]="isSyncedCategory()" (click)="requestSyncToggle('category')">
+                <span class="ce-toggle-knob"></span>
+              </span>
+            </label>
+          }
+        </div>
+
+        <span class="ce-field-label">
+          <span class="ce-req">*</span> Category
+          @if (isSyncedCategory()) {
+            <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+          }
+        </span>
+        <div [class.ce-locked]="isSyncedCategory()">
+          <app-search-select
+            [options]="categoryOptions"
+            [value]="category()"
+            (valueChange)="onCategoryInput($event)"
+            [disabled]="isSyncedCategory()"
+            placeholder="Select categories…"
+            searchPlaceholder="Search categories…"
+            [allowCreate]="true" />
+        </div>
+        <p class="ce-help">Select one or more categories. Click to add/remove.</p>
+
+        <span class="ce-field-label">
+          Tags
+          @if (isSyncedCategory()) {
+            <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+          }
+        </span>
+        <div [class.ce-locked]="isSyncedCategory()">
+          <app-search-select
+            [options]="genreOptions"
+            [value]="tags()"
+            (valueChange)="onTagsInput($event)"
+            [disabled]="isSyncedCategory()"
+            placeholder="Select Genre, like Ballet, Comedy…"
+            searchPlaceholder="Search genres…"
+            [allowCreate]="true" />
+        </div>
+        @if (isSyncedCategory()) {
+          <span class="ce-locked-hint"><mat-icon>Link Chain</mat-icon> Locked to series — click the toggle to edit</span>
+        }
+        <p class="ce-help">Select one or more genres. Click to add/remove.</p>
+      </section>
+
+      <!-- Section: Lineup (artists from database) -->
+      <section class="ce-section" id="sec-lineup">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>User Group</mat-icon> Lineup</h2>
+            <p>Artists from the database. {{ isSyncedLineup() ? 'Inherited from series — turn off sync to customize for this date.' : 'Changes here affect only this date.' }}</p>
+          </div>
+          @if (parentSeries()) {
+            <label class="ce-sync">
+              Sync with series
+              <span class="ce-toggle" [class.on]="syncLineup()" [class.hint]="isSyncedLineup()" (click)="requestSyncToggle('lineup')">
+                <span class="ce-toggle-knob"></span>
+              </span>
+            </label>
+          }
+        </div>
+
+        <p class="ce-help">
+          {{ lineupSummary() }}
+          @if (isSyncedLineup()) {
+            <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+          }
+        </p>
+
+        @if (lineup().length > 0) {
+          <div class="ce-lineup" [class.ce-locked]="isSyncedLineup()">
+            @for (slot of lineup(); track slot.id) {
+              <button class="ce-lineup-row" (click)="openArtist(slot)" [disabled]="isSyncedLineup()">
+                <mat-icon class="ce-lineup-drag">Vertical Menu</mat-icon>
+                <span class="ce-lineup-avatar" [style.background]="slot.avatar">{{ slot.name.charAt(0) }}</span>
+                <div class="ce-lineup-info">
+                  <strong>{{ slot.name }}</strong>
+                  <span class="ce-lineup-sub">
+                    <mat-icon>Circle Clock</mat-icon>
+                    {{ slot.time || '—' }} · {{ slot.members.length }} members
+                  </span>
+                </div>
+                <span class="ce-lineup-badge" [class]="'ce-lineup-badge--' + slot.role">{{ roleLabel(slot.role) }}</span>
+                <mat-icon class="ce-lineup-caret">Tailless Line Arrow Right 1</mat-icon>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="ce-lineup-empty">No artists yet. Use "Add slot" to add performers.</div>
+        }
+
+        @if (!isSyncedLineup()) {
+          <button class="ce-btn ce-btn-primary ce-add-btn" (click)="openAddArtist()">
+            <mat-icon>Add 1</mat-icon>
+            Add slot
+          </button>
+        } @else {
+          <span class="ce-locked-hint"><mat-icon>Link Chain</mat-icon> Locked to series — click the toggle to edit</span>
+        }
+      </section>
+
+      <!-- Section: Internal Information -->
+      <section class="ce-section" id="sec-internal">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2>
+              <mat-icon>Chat Bubble Text Oval</mat-icon>
+              Internal Information
+              <span class="ce-badge ce-badge-purple">Not public</span>
+            </h2>
+            <p>Visible only to internal users, cashiers, and POS terminal employees. Not shown to public.</p>
+          </div>
+          @if (parentSeries()) {
+            <label class="ce-sync">
+              Sync with series
+              <span class="ce-toggle" [class.on]="syncInternal()" [class.hint]="isSyncedCashier()" (click)="requestSyncToggle('internal')">
+                <span class="ce-toggle-knob"></span>
+              </span>
+            </label>
+          }
+        </div>
+
+        <span class="ce-field-label">Translations</span>
+        <div class="ce-lang-chips">
+          <button class="ce-lang-chip active">
+            <mat-icon class="ce-lang-ico">Translate Text</mat-icon>
+            English
+            <mat-icon class="ce-lang-trash">Trash</mat-icon>
+          </button>
+        </div>
+
+        @for (block of internalBlocks; track block.key) {
+          <div class="ce-richtext" [class.ce-locked]="syncedInternalKey(block.key)">
+            <div class="ce-richtext-head">
+              <span class="ce-field-label">
+                {{ block.label }} <span class="ce-lang-pill">English</span>
+                @if (syncedInternalKey(block.key)) {
+                  <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+                }
+              </span>
+            </div>
+            <div class="ce-richtext-toolbar">
+              <button>H<sub>1</sub></button>
+              <button>H<sub>2</sub></button>
+              <button>H<sub>3</sub></button>
+              <span class="ce-rt-sep"></span>
+              <button><strong>B</strong></button>
+              <button><em>I</em></button>
+              <button><u>U</u></button>
+              <span class="ce-rt-sep"></span>
+              <button><mat-icon>Text File</mat-icon></button>
+              <button><mat-icon>Text File</mat-icon></button>
+              <span class="ce-rt-sep"></span>
+              <button><mat-icon>Link Chain</mat-icon></button>
+              <button><mat-icon>Tailless Line Arrow Left 1</mat-icon></button>
+              <button><mat-icon>Tailless Line Arrow Right 1</mat-icon></button>
+            </div>
+            <textarea
+              class="ce-richtext-area"
+              rows="4"
+              [ngModel]="internalBlockValue(block.key)"
+              (ngModelChange)="onInternalBlockInput(block.key, $event)"
+              [disabled]="syncedInternalKey(block.key)"></textarea>
+            <p class="ce-help">
+              @if (syncedInternalKey(block.key)) {
+                Inherited from the series. Turn off "Sync with series" to override.
+              } @else {
+                Visible only to internal users, cashiers and POS terminals.
+              }
+            </p>
+          </div>
+        }
+
+        <span class="ce-field-label">Internal Tags</span>
+        <input class="ce-input" type="text" placeholder="Your tag" />
+        <p class="ce-help">Comma-separated tags for internal filtering (e.g. priority, seasonal, promo)</p>
+      </section>
+      }
+
+      @if (mode() === 'tickets') {
+        <app-tickets-step />
+      }
+
+      @if (mode() === 'extras') {
+        <section class="ce-section ce-coming-soon">
+          <mat-icon>Dashboard Square</mat-icon>
+          <h2>Extras — coming soon</h2>
+          <p>Add-ons, merchandise and upsells will be configured here in a future release.</p>
+        </section>
+      }
+
+      @if (mode() === 'summary') {
+        <section class="ce-section">
+          <div class="ce-sec-head">
+            <div class="ce-sec-head-text">
+              <h2><mat-icon>Text File</mat-icon> Summary</h2>
+              <p>Review everything before you finish the event setup.</p>
+            </div>
+            <span class="ce-chip ce-chip-warning"><mat-icon class="ce-chip-ico">Circle Clock</mat-icon> Scheduled</span>
+          </div>
+
+          @if (coverImageUrl()) {
+            <div class="ce-sum-cover">
+              <img [src]="coverImageUrl()" alt="Event cover" />
+            </div>
+          }
+
+          <div class="ce-sum-grid">
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Event name</span>
+              <span class="ce-sum-v">{{ eventName() || '—' }}</span>
+            </div>
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Date &amp; time</span>
+              <span class="ce-sum-v">{{ formatDate(startDate()) }} · {{ startTime() }}–{{ endTime() }}</span>
+            </div>
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Venue</span>
+              <span class="ce-sum-v">{{ venue() || '—' }}</span>
+            </div>
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Category</span>
+              <span class="ce-sum-v">{{ category() || '—' }}</span>
+            </div>
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Tags / genre</span>
+              <span class="ce-sum-v">{{ tags() || '—' }}</span>
+            </div>
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Slug</span>
+              <span class="ce-sum-v">/{{ slug() || '—' }}</span>
+            </div>
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Lineup</span>
+              <span class="ce-sum-v">{{ lineupSummary() }}</span>
+            </div>
+            <div class="ce-sum-card">
+              <span class="ce-sum-k">Doors open</span>
+              <span class="ce-sum-v">{{ doorsTime() || '—' }}</span>
+            </div>
+          </div>
+
+          <h3 class="ce-subhead"><mat-icon>Text File</mat-icon> Description</h3>
+          <p class="ce-sum-text">{{ description() || 'No description yet.' }}</p>
+
+          <h3 class="ce-subhead"><mat-icon>User Group</mat-icon> Lineup</h3>
+          <div class="ce-sum-lineup">
+            @for (slot of lineup(); track slot.id) {
+              <span class="ce-sum-artist">
+                <span class="ce-sum-dot" [style.background]="slot.avatar"></span>
+                {{ slot.name }} <small>({{ roleLabel(slot.role) }})</small>
+              </span>
+            }
+            @if (lineup().length === 0) { <span class="ce-sum-v">No artists added.</span> }
+          </div>
+
+          <div class="ce-sum-finish">
+            <button class="ce-btn ce-btn-secondary" (click)="saveDraftAndExit()">
+              <mat-icon>Text File</mat-icon>
+              Save as draft
+            </button>
+            <button class="ce-btn ce-btn-primary" (click)="publishEvent()">
+              <mat-icon>Double Tailless Line Arrow Up</mat-icon>
+              Publish event
+            </button>
+          </div>
+        </section>
+      }
+    </div>
+
+    <!-- Bottom action bar -->
+    <footer class="ce-bottombar">
+      <button class="ce-btn ce-btn-ghost" (click)="prevStep()">
+        <mat-icon>Tailless Line Arrow Left 1</mat-icon>
+        {{ isFirstStep() ? 'Exit' : 'Back' }}
+      </button>
+      <div class="ce-bottombar-right">
+        <button class="ce-btn ce-btn-secondary" (click)="saveDraft()">Save draft</button>
+        @if (isLastStep()) {
+          <button class="ce-btn ce-btn-primary" (click)="publishEvent()">
+            <mat-icon>Double Tailless Line Arrow Up</mat-icon>
+            Publish event
+          </button>
+        } @else {
+          <button class="ce-btn ce-btn-primary" (click)="nextStep()">
+            Save &amp; Next
+            <mat-icon>Tailless Line Arrow Right 1</mat-icon>
+          </button>
+        }
+      </div>
+    </footer>
+  </main>
+</div>

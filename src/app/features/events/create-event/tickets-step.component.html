@@ -1,0 +1,414 @@
+<!-- ===== Ticket sales source ===== -->
+<section class="ts-section" id="tk-source">
+  <div class="ts-sec-head">
+    <h2><mat-icon>Ticket</mat-icon> Ticket sales source</h2>
+    <p>Where tickets for this event are sold.</p>
+  </div>
+
+  <div class="ts-source-cards">
+    <button class="ts-source" [class.active]="salesSource() === 'biletomat'" (click)="salesSource.set('biletomat')">
+      <mat-icon>Shopping Cart 1</mat-icon>
+      <span class="ts-source-title">Biletomat.com</span>
+      <span class="ts-source-sub">Sell through the Biletomat marketplace</span>
+    </button>
+    <button class="ts-source" [class.active]="salesSource() === 'external'" (click)="salesSource.set('external')">
+      <mat-icon>Web</mat-icon>
+      <span class="ts-source-title">External</span>
+      <span class="ts-source-sub">Link out to another ticketing site</span>
+    </button>
+    <button class="ts-source" [class.active]="salesSource() === 'info-only'" (click)="salesSource.set('info-only')">
+      <mat-icon>Information Circle</mat-icon>
+      <span class="ts-source-title">Info-only</span>
+      <span class="ts-source-sub">No tickets — informational listing</span>
+    </button>
+  </div>
+
+  @if (salesSource() === 'external') {
+    <label class="ts-field">
+      <span class="ts-label"><span class="ts-req">*</span> External ticket URL</span>
+      <input class="ts-input" type="text" [ngModel]="externalUrl()" (ngModelChange)="externalUrl.set($event)" placeholder="https://example.com/tickets" />
+    </label>
+  }
+  @if (salesSource() === 'info-only') {
+    <div class="ts-notice">
+      <mat-icon>Information Circle</mat-icon>
+      This is an informational listing. No ticket types, prices or sales are configured.
+    </div>
+  }
+</section>
+
+@if (showTickets()) {
+  <!-- ===== Price information display ===== -->
+  <section class="ts-section">
+    <div class="ts-sec-head">
+      <h2><mat-icon>Pin-Dollar</mat-icon> Price Information Display</h2>
+      <p>Display-only summary. Actual pricing is defined in the price categories below.</p>
+    </div>
+    <label class="ts-field">
+      <span class="ts-label">Price Summary (for display)</span>
+      <input class="ts-input" type="text" [ngModel]="priceSummary()" (ngModelChange)="priceSummary.set($event)" placeholder="e.g. From €25 to €150, Free entry" />
+    </label>
+  </section>
+
+  <!-- ===== Ticket sale period ===== -->
+  <section class="ts-section" id="tk-sale">
+    <div class="ts-sec-head">
+      <h2><mat-icon>Circle Clock</mat-icon> Ticket Sale Period</h2>
+      <p>When tickets are available for purchase.</p>
+    </div>
+    <div class="ts-grid-2">
+      <label class="ts-field">
+        <span class="ts-label">Sale start date</span>
+        <input class="ts-input" type="date" [ngModel]="saleStartDate()" (ngModelChange)="saleStartDate.set($event)" />
+      </label>
+      <label class="ts-field">
+        <span class="ts-label">Sale start time</span>
+        <input class="ts-input" type="time" [ngModel]="saleStartTime()" (ngModelChange)="saleStartTime.set($event)" />
+      </label>
+      <label class="ts-field">
+        <span class="ts-label">Sale end date</span>
+        <input class="ts-input" type="date" [ngModel]="saleEndDate()" (ngModelChange)="saleEndDate.set($event)" />
+      </label>
+      <label class="ts-field">
+        <span class="ts-label">Sale end time</span>
+        <input class="ts-input" type="time" [ngModel]="saleEndTime()" (ngModelChange)="saleEndTime.set($event)" />
+      </label>
+    </div>
+  </section>
+
+  <!-- ===== Price categories ===== -->
+  <section class="ts-section" id="tk-categories">
+    <div class="ts-sec-head">
+      <h2><mat-icon>Tag</mat-icon> Price Categories</h2>
+      <p>{{ saved().length }} saved · {{ drafts().length }} draft{{ drafts().length === 1 ? '' : 's' }}</p>
+    </div>
+
+    <!-- Draft cards -->
+    @for (c of drafts(); track c.id) {
+      <article class="ts-draft">
+        <header class="ts-draft-head">
+          <span class="ts-badge">Draft</span>
+          <span class="ts-draft-name">{{ c.internalName || 'New price category' }}</span>
+          <span class="ts-draft-price">€{{ c.basePrice || '0' }}</span>
+          <div class="ts-draft-actions">
+            <button class="ts-icon-btn" (click)="duplicateDraft(c.id)" title="Duplicate"><mat-icon>Copy 1</mat-icon></button>
+            <button class="ts-icon-btn" (click)="removeDraft(c.id)" [disabled]="drafts().length === 1" title="Remove"><mat-icon>Trash</mat-icon></button>
+          </div>
+        </header>
+
+        <!-- Top selectors -->
+        <div class="ts-grid-2">
+          <label class="ts-field">
+            <span class="ts-label">Predefined ticket type</span>
+            <div class="ts-type-row">
+              <select class="ts-input" [ngModel]="c.ticketType" (ngModelChange)="patch(c.id, { ticketType: $event })">
+                @for (t of ticketTypes(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
+              </select>
+              <button class="ts-link-btn" (click)="startAddType()">+ Create new type</button>
+            </div>
+          </label>
+        </div>
+        @if (addingType()) {
+          <div class="ts-newtype">
+            <input class="ts-input" type="text" [ngModel]="newTypeName()" (ngModelChange)="newTypeName.set($event)" placeholder="New ticket type name" />
+            <button class="ts-btn ts-btn-primary" (click)="confirmAddType()">Add type</button>
+            <button class="ts-btn ts-btn-ghost" (click)="cancelAddType()">Cancel</button>
+          </div>
+        }
+
+        <!-- Naming & description -->
+        <h3 class="ts-subhead">Naming &amp; Description</h3>
+        <div class="ts-grid-2">
+          <label class="ts-field">
+            <span class="ts-label"><span class="ts-req">*</span> Internal Name</span>
+            <input class="ts-input" type="text" [ngModel]="c.internalName" (ngModelChange)="patch(c.id, { internalName: $event })" placeholder="e.g. Standard Adult Ticket" />
+            <small class="ts-help">Admin-only, not visible to buyers</small>
+          </label>
+          <label class="ts-field">
+            <span class="ts-label"><span class="ts-req">*</span> Display Name</span>
+            <input class="ts-input" type="text" [ngModel]="c.displayName" (ngModelChange)="patch(c.id, { displayName: $event })" placeholder="e.g. Adult" maxlength="80" />
+            <small class="ts-help">Shown on the purchase form &amp; tickets (max 80 chars)</small>
+          </label>
+        </div>
+        <label class="ts-field">
+          <span class="ts-label">Description</span>
+          <textarea class="ts-input" rows="2" [ngModel]="c.description" (ngModelChange)="patch(c.id, { description: $event })" maxlength="180" placeholder="Shown to buyers (max 180 chars)"></textarea>
+        </label>
+
+        <!-- Pricing & VAT -->
+        <h3 class="ts-subhead">Pricing &amp; VAT</h3>
+        <div class="ts-tabs">
+          @for (m of pricingModels; track m.key) {
+            <button class="ts-tab" [class.active]="c.pricingModel === m.key" (click)="patch(c.id, { pricingModel: m.key })">{{ m.label }}</button>
+          }
+        </div>
+
+        <div class="ts-grid-2">
+          <label class="ts-field">
+            <span class="ts-label">Base Price</span>
+            <div class="ts-input-prefix">
+              <span class="ts-prefix">€</span>
+              <input class="ts-input" type="number" [ngModel]="c.basePrice" (ngModelChange)="patch(c.id, { basePrice: $event })" placeholder="0.00" />
+            </div>
+          </label>
+          <div class="ts-field">
+            <span class="ts-label">VAT Rate (%)</span>
+            <div class="ts-vat-row">
+              <label class="ts-check">
+                <input type="checkbox" [checked]="c.vatExempt" (change)="patch(c.id, { vatExempt: !c.vatExempt })" />
+                <span>VAT exempt</span>
+              </label>
+              <input class="ts-input ts-input-sm" type="number" [disabled]="c.vatExempt" [ngModel]="c.vatRate" (ngModelChange)="patch(c.id, { vatRate: $event })" placeholder="20" />
+            </div>
+          </div>
+        </div>
+
+        @if (c.pricingModel === 'theater') {
+          <div class="ts-grid-2">
+            <label class="ts-field">
+              <span class="ts-label">Starting Price</span>
+              <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c.startPrice" (ngModelChange)="patch(c.id, { startPrice: $event })" placeholder="0.00" /></div>
+            </label>
+            <label class="ts-field">
+              <span class="ts-label">End Price</span>
+              <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c.endPrice" (ngModelChange)="patch(c.id, { endPrice: $event })" placeholder="0.00" /></div>
+            </label>
+          </div>
+        }
+        @if (c.pricingModel === 'dynamic') {
+          <p class="ts-help">Dynamic pricing adjusts the price based on demand (unvouchered events only).</p>
+        }
+
+        <div class="ts-fee-row">
+          <span class="ts-label">Fee Type</span>
+          <label class="ts-radio">
+            <input type="radio" [name]="'fee-' + c.id" [checked]="c.feeType === 'commission'" (change)="patch(c.id, { feeType: 'commission' })" />
+            <span>Commission (deducted from base price)</span>
+          </label>
+          <label class="ts-radio">
+            <input type="radio" [name]="'fee-' + c.id" [checked]="c.feeType === 'agency'" (change)="patch(c.id, { feeType: 'agency' })" />
+            <span>Agency fee (added on top)</span>
+          </label>
+        </div>
+        <label class="ts-field ts-field-narrow">
+          <span class="ts-label">Fee amount</span>
+          <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c.feeAmount" (ngModelChange)="patch(c.id, { feeAmount: $event })" placeholder="0.00" /></div>
+        </label>
+
+        <!-- Capacity -->
+        <h3 class="ts-subhead">Capacity</h3>
+        <label class="ts-check">
+          <input type="checkbox" [checked]="c.matchCapacityWithSeats" (change)="patch(c.id, { matchCapacityWithSeats: !c.matchCapacityWithSeats })" />
+          <span>Match capacity with assigned seats on the seating map</span>
+        </label>
+        <label class="ts-field ts-field-narrow">
+          <span class="ts-label">Price category capacity</span>
+          <input class="ts-input" type="number" [disabled]="c.matchCapacityWithSeats" [ngModel]="c.capacity" (ngModelChange)="patch(c.id, { capacity: $event })" placeholder="e.g. 500" />
+          <small class="ts-help">Maximum tickets available for this price category</small>
+        </label>
+
+        <!-- Validity period -->
+        <h3 class="ts-subhead">Validity Period</h3>
+        <div class="ts-grid-2">
+          <label class="ts-field"><span class="ts-label">Ticket validity start</span><input class="ts-input" type="date" [ngModel]="c.validityStart" (ngModelChange)="patch(c.id, { validityStart: $event })" /></label>
+          <label class="ts-field"><span class="ts-label">Ticket validity end</span><input class="ts-input" type="date" [ngModel]="c.validityEnd" (ngModelChange)="patch(c.id, { validityEnd: $event })" /></label>
+        </div>
+
+        <!-- Sale schedule (date window OR cascade) -->
+        <h3 class="ts-subhead">Sale Schedule</h3>
+        <p class="ts-help" style="margin-top:-2px;">Pick how this category goes on sale.</p>
+        <div class="ts-schedule-modes">
+          <label class="ts-radio">
+            <input type="radio" [name]="'sched-' + c.id" [checked]="c.saleScheduleMode === 'date'" (change)="patch(c.id, { saleScheduleMode: 'date' })" />
+            <span>By date range</span>
+          </label>
+          <label class="ts-radio">
+            <input type="radio" [name]="'sched-' + c.id" [checked]="c.saleScheduleMode === 'after'" (change)="patch(c.id, { saleScheduleMode: 'after' })" />
+            <span>Start after another category sells out</span>
+          </label>
+        </div>
+
+        @if (c.saleScheduleMode === 'date') {
+          @if (inheritsEventWindow(c)) {
+            <p class="ts-schedule-inherit">
+              Leave empty to inherit the event-level sale window
+              ({{ saleStartDate() }} {{ saleStartTime() }} → {{ saleEndDate() }} {{ saleEndTime() }}).
+            </p>
+          }
+          <div class="ts-grid-2">
+            <label class="ts-field"><span class="ts-label">Sale start date</span><input class="ts-input" type="date" [ngModel]="c.saleStartDate" (ngModelChange)="patch(c.id, { saleStartDate: $event })" /></label>
+            <label class="ts-field"><span class="ts-label">Sale start time</span><input class="ts-input" type="time" [ngModel]="c.saleStartTime" (ngModelChange)="patch(c.id, { saleStartTime: $event })" /></label>
+            <label class="ts-field"><span class="ts-label">Sale end date</span><input class="ts-input" type="date" [ngModel]="c.saleEndDate" (ngModelChange)="patch(c.id, { saleEndDate: $event })" /></label>
+            <label class="ts-field"><span class="ts-label">Sale end time</span><input class="ts-input" type="time" [ngModel]="c.saleEndTime" (ngModelChange)="patch(c.id, { saleEndTime: $event })" /></label>
+          </div>
+          @if (saleWindowError(c); as err) {
+            <p class="ts-schedule-error">{{ err }}</p>
+          }
+        } @else {
+          <p class="ts-help">Activates when the source category reaches ≤ 1 ticket remaining — prevents a gap in sales.</p>
+          @if (cascadeSources(c.id).length === 0) {
+            <p class="ts-schedule-error">No saved categories yet — add one to the event first so it can be used as a source.</p>
+          } @else {
+            <label class="ts-field ts-field-narrow">
+              <span class="ts-label">Source category</span>
+              <select class="ts-input" [ngModel]="c.startAfterSource" (ngModelChange)="patch(c.id, { startAfterSource: $event })">
+                <option value="">Select source category…</option>
+                @for (n of cascadeSources(c.id); track n) { <option [value]="n">{{ n }}</option> }
+              </select>
+            </label>
+          }
+        }
+
+        <!-- Visibility -->
+        <h3 class="ts-subhead">Visibility &amp; Access</h3>
+        <div class="ts-checks">
+          <label class="ts-check"><input type="checkbox" [checked]="c.posOnly" (change)="patch(c.id, { posOnly: !c.posOnly })" /><span>Visible only at POS</span></label>
+          <label class="ts-check"><input type="checkbox" [checked]="c.personal" (change)="patch(c.id, { personal: !c.personal })" /><span>Personal price category (buyer info required)</span></label>
+          <label class="ts-check"><input type="checkbox" [checked]="c.accessCodeRequired" (change)="patch(c.id, { accessCodeRequired: !c.accessCodeRequired })" /><span>Requires access code</span></label>
+        </div>
+
+        <!-- Service fee by channel -->
+        <h3 class="ts-subhead">Service Fee by channel</h3>
+        <div class="ts-grid-3">
+          <label class="ts-field"><span class="ts-label">Marketplace %</span><input class="ts-input" type="number" [ngModel]="c.marketplaceFee" (ngModelChange)="patch(c.id, { marketplaceFee: $event })" placeholder="0" /></label>
+          <label class="ts-field"><span class="ts-label">Embedded %</span><input class="ts-input" type="number" [ngModel]="c.embeddedFee" (ngModelChange)="patch(c.id, { embeddedFee: $event })" placeholder="0" /></label>
+          <label class="ts-field"><span class="ts-label">POS %</span><input class="ts-input" type="number" [ngModel]="c.posFee" (ngModelChange)="patch(c.id, { posFee: $event })" placeholder="0" /></label>
+        </div>
+
+        <footer class="ts-draft-foot">
+          <button class="ts-btn ts-btn-primary" [disabled]="!canSave(c)" (click)="addToEvent(c.id)">
+            <mat-icon>Check</mat-icon>
+            Add to Event
+          </button>
+        </footer>
+      </article>
+    }
+
+    <button class="ts-add-cat" (click)="addCategory()">
+      <mat-icon>Add 1</mat-icon>
+      Add Category
+    </button>
+
+    <!-- Saved categories = sales overview -->
+    @if (saved().length > 0) {
+      <div class="ts-saved-head">Saved categories — sales overview</div>
+      <div class="ts-table-wrap">
+        <table class="ts-table">
+          <thead>
+            <tr>
+              <th>Price Category</th>
+              <th>VAT Rate</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Base Price</th>
+              <th>Surcharge</th>
+              <th>Portal Price</th>
+              <th>Dynamic</th>
+              <th>Reserved</th>
+              <th>Sold</th>
+              <th>Available</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of saved(); track c.id) {
+              <tr>
+                <td>
+                  <span class="ts-td-name">{{ c.displayName }}</span>
+                  <span class="ts-td-sub">{{ c.internalName }}</span>
+                </td>
+                <td>{{ c.vatExempt ? 'Exempt' : c.vatRate + '%' }}</td>
+                <td>{{ effectiveSaleStart(c) }}</td>
+                <td>{{ effectiveSaleEnd(c) }}</td>
+                <td>€{{ c.basePrice || '0' }}</td>
+                <td>€{{ surcharge(c) }}</td>
+                <td>€{{ portalPrice(c) }}</td>
+                <td><span class="ts-dot" [class.on]="c.pricingModel === 'dynamic'"></span></td>
+                <td>{{ c.reserved }}</td>
+                <td>{{ c.sold }}</td>
+                <td>{{ c.matchCapacityWithSeats ? '—' : available(c) }}</td>
+                <td class="ts-td-actions">
+                  <button class="ts-icon-btn" [matMenuTriggerFor]="rowMenu"><mat-icon>Vertical Menu</mat-icon></button>
+                  <mat-menu #rowMenu="matMenu">
+                    <button mat-menu-item (click)="editSaved(c.id)"><mat-icon>Pencil</mat-icon> Edit</button>
+                    <button mat-menu-item (click)="duplicateSaved(c.id)"><mat-icon>Copy 1</mat-icon> Duplicate</button>
+                    <button mat-menu-item (click)="deleteSaved(c.id)"><mat-icon>Trash</mat-icon> Delete</button>
+                  </mat-menu>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- ===== Places ===== -->
+  <section class="ts-section" id="tk-places">
+    <div class="ts-sec-head">
+      <h2><mat-icon>Location Pin 1</mat-icon> Places</h2>
+      <p>Seated maps and general-admission pools.</p>
+    </div>
+    <div class="ts-place-row">
+      <label class="ts-radio">
+        <input type="radio" name="place-type" [checked]="placeType() === 'ga'" (change)="placeType.set('ga')" />
+        <span>General admission (pool)</span>
+      </label>
+      <label class="ts-radio">
+        <input type="radio" name="place-type" [checked]="placeType() === 'seated'" (change)="placeType.set('seated')" />
+        <span>Numbered seats</span>
+      </label>
+    </div>
+    @if (placeType() === 'ga') {
+      <label class="ts-field ts-field-narrow">
+        <span class="ts-label">Total capacity</span>
+        <input class="ts-input" type="number" [ngModel]="poolCapacity()" (ngModelChange)="poolCapacity.set($event)" placeholder="e.g. 500" />
+      </label>
+
+      @if (pools().length > 0) {
+        <div class="ts-pools">
+          @for (p of pools(); track p.id) {
+            <div class="ts-pool">
+              <div class="ts-pool-info">
+                <strong>{{ p.name || 'General admission pool' }}</strong>
+                <small>{{ p.categories.join(', ') }} · limit {{ p.capacity }}</small>
+              </div>
+              <button class="ts-icon-btn" (click)="removePool(p.id)" title="Remove pool"><mat-icon>Trash</mat-icon></button>
+            </div>
+          }
+        </div>
+      }
+      <button class="ts-add-cat" (click)="openPoolModal()">
+        <mat-icon>Add 1</mat-icon>
+        Add general admission pool
+      </button>
+    } @else {
+      <div class="ts-place-note">
+        <mat-icon>Information Circle</mat-icon>
+        Numbered seating is configured on the venue's audience plan.
+      </div>
+    }
+  </section>
+
+  <!-- ===== Ticket rules ===== -->
+  <section class="ts-section" id="tk-rules">
+    <div class="ts-sec-head">
+      <h2><mat-icon>Cog 1</mat-icon> Ticket rules &amp; settings</h2>
+      <p>Per-order limits and low-availability warnings.</p>
+    </div>
+    <div class="ts-grid-2">
+      <label class="ts-field">
+        <span class="ts-label">Min tickets per order</span>
+        <input class="ts-input" type="number" [ngModel]="minPerOrder()" (ngModelChange)="minPerOrder.set($event)" placeholder="1" />
+      </label>
+      <label class="ts-field">
+        <span class="ts-label">Max tickets per order</span>
+        <input class="ts-input" type="number" [ngModel]="maxPerOrder()" (ngModelChange)="maxPerOrder.set($event)" placeholder="10" />
+      </label>
+    </div>
+    <label class="ts-check">
+      <input type="checkbox" [checked]="lowAvailability()" (change)="lowAvailability.set(!lowAvailability())" />
+      <span>Show "low availability" warning near sell-out</span>
+    </label>
+  </section>
+}
