@@ -2,7 +2,7 @@
 <section class="ts-section" id="tk-source">
   <div class="ts-sec-head">
     <h2><mat-icon>Ticket</mat-icon> Ticket sales source</h2>
-    <p>Where tickets for this event are sold.</p>
+    <p>Where tickets for this event are sold. Pick <strong>Biletomat</strong> to sell through our system; <strong>External</strong> to link out (no checkout here); <strong>Info-only</strong> if the event has no ticket sale at all.</p>
   </div>
 
   <div class="ts-source-cards">
@@ -38,23 +38,65 @@
 </section>
 
 @if (showTickets()) {
-  <!-- ===== Price information display ===== -->
-  <section class="ts-section">
+  <!-- ===== Tickets setup (formerly "Places") — moved to top per new logic:
+       1. Seated or not  →  2. Capacity  →  3. Ticket types  →  4. Pools (if needed) ===== -->
+  <section class="ts-section" id="tk-places">
     <div class="ts-sec-head">
-      <h2><mat-icon>Pin-Dollar</mat-icon> Price Information Display</h2>
-      <p>Display-only summary. Actual pricing is defined in the price categories below.</p>
+      <h2><mat-icon>Location Pin 1</mat-icon> Tickets setup</h2>
+      <p>Pick how tickets sell: numbered seats on a venue plan, or general-admission pools. This decision drives the rest of the tickets flow.</p>
     </div>
-    <label class="ts-field">
-      <span class="ts-label">Price Summary (for display)</span>
-      <input class="ts-input" type="text" [ngModel]="priceSummary()" (ngModelChange)="priceSummary.set($event)" placeholder="e.g. From €25 to €150, Free entry" />
-    </label>
+    <div class="ts-place-row">
+      <label class="ts-radio">
+        <input type="radio" name="place-type" [checked]="placeType() === 'ga'" (change)="placeType.set('ga')" />
+        <span>General admission</span>
+      </label>
+      <label class="ts-radio">
+        <input type="radio" name="place-type" [checked]="placeType() === 'seated'" (change)="placeType.set('seated')" />
+        <span>Numbered seats</span>
+      </label>
+    </div>
+    @if (placeType() === 'ga') {
+      <h3 class="ts-subhead">Pools <span class="ts-req">*</span></h3>
+      <p class="ts-help" style="margin-top:-2px;">
+        Tickets need a <strong>pool</strong> — a container that defines capacity and which price categories pull from it. Even a single "Main pool" works for a basic GA event. Use multiple pools to enforce separate caps (e.g. a 500-seat VIP pool + a 1,000-seat Standard pool that sell independently).
+        <br /><br />
+        <strong>Set up pool capacity here first.</strong> Price categories below get assigned to one of these pools when you create them.
+      </p>
+      @if (pools().length === 0) {
+        <div class="ts-notice ts-notice-warning">
+          <mat-icon>Information Circle</mat-icon>
+          A General Admission event must have at least one pool. Add one below.
+        </div>
+      } @else {
+        <div class="ts-pools">
+          @for (p of pools(); track p.id) {
+            <div class="ts-pool">
+              <div class="ts-pool-info">
+                <strong>{{ p.name || 'General admission pool' }}</strong>
+                <small>{{ p.categories.length ? p.categories.join(', ') : 'No categories assigned yet' }} · capacity {{ p.capacity }}</small>
+              </div>
+              <button class="ts-icon-btn" (click)="removePool(p.id)" [disabled]="pools().length === 1" [title]="pools().length === 1 ? 'At least one pool is required' : 'Remove pool'"><mat-icon>Trash</mat-icon></button>
+            </div>
+          }
+        </div>
+      }
+      <button class="ts-add-cat" (click)="openPoolModal()">
+        <mat-icon>Add 1</mat-icon>
+        Add pool
+      </button>
+    } @else {
+      <div class="ts-place-note">
+        <mat-icon>Information Circle</mat-icon>
+        Numbered seating is configured on the venue's audience plan. Capacity comes from the plan — no pool needed because each seat is its own unit.
+      </div>
+    }
   </section>
 
   <!-- ===== Ticket sale period ===== -->
   <section class="ts-section" id="tk-sale">
     <div class="ts-sec-head">
       <h2><mat-icon>Circle Clock</mat-icon> Ticket Sale Period</h2>
-      <p>When tickets are available for purchase.</p>
+      <p>The event-wide window when buyers can purchase tickets. Per-category windows can override this inside each price category card below.</p>
     </div>
     <div class="ts-grid-2">
       <label class="ts-field">
@@ -80,321 +122,26 @@
   <section class="ts-section" id="tk-categories">
     <div class="ts-sec-head">
       <h2><mat-icon>Tag</mat-icon> Price Categories</h2>
-      <p>{{ saved().length }} saved · {{ drafts().length }} draft{{ drafts().length === 1 ? '' : 's' }}</p>
+      <p>
+        Each priced ticket line is one Price Category. A category sets the price, capacity, sale window and channel fees, and references a reusable <strong>Subcategory</strong> (Standard / Reduced / Season pass …) that carries default VAT and portal presentation.
+        <br />
+        <span style="color: var(--ts-fg-muted); font-size: 12px;">{{ saved().length }} saved categor{{ saved().length === 1 ? 'y' : 'ies' }}</span>
+      </p>
     </div>
 
-    <!-- Draft cards -->
-    @for (c of drafts(); track c.id) {
-      <article class="ts-draft">
-        <header class="ts-draft-head">
-          <span class="ts-badge">Draft</span>
-          <span class="ts-draft-name">{{ c.internalName || 'New price category' }}</span>
-          <span class="ts-draft-price">€{{ c.basePrice || '0' }}</span>
-          <div class="ts-draft-actions">
-            <button class="ts-icon-btn" (click)="duplicateDraft(c.id)" title="Duplicate"><mat-icon>Copy 1</mat-icon></button>
-            <button class="ts-icon-btn" (click)="removeDraft(c.id)" [disabled]="drafts().length === 1" title="Remove"><mat-icon>Trash</mat-icon></button>
-          </div>
-        </header>
-
-        <!-- Top selectors -->
-        <div class="ts-grid-2">
-          <label class="ts-field">
-            <span class="ts-label">Predefined ticket type</span>
-            <div class="ts-type-row">
-              <select class="ts-input" [ngModel]="c.ticketType" (ngModelChange)="patch(c.id, { ticketType: $event })">
-                @for (t of ticketTypes(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
-              </select>
-              <button class="ts-link-btn" (click)="startAddType()">+ Create new type</button>
-            </div>
-          </label>
-        </div>
-        @if (addingType()) {
-          <div class="ts-newtype">
-            <input class="ts-input" type="text" [ngModel]="newTypeName()" (ngModelChange)="newTypeName.set($event)" placeholder="New ticket type name" />
-            <button class="ts-btn ts-btn-primary" (click)="confirmAddType()">Add type</button>
-            <button class="ts-btn ts-btn-ghost" (click)="cancelAddType()">Cancel</button>
-          </div>
-        }
-
-        <!-- Naming & description -->
-        <h3 class="ts-subhead">Naming &amp; Description</h3>
-        <div class="ts-grid-2">
-          <label class="ts-field">
-            <span class="ts-label"><span class="ts-req">*</span> Internal Name</span>
-            <input class="ts-input" type="text" [ngModel]="c.internalName" (ngModelChange)="patch(c.id, { internalName: $event })" placeholder="e.g. Standard Adult Ticket" />
-            <small class="ts-help">Admin-only, not visible to buyers</small>
-          </label>
-          <label class="ts-field">
-            <span class="ts-label"><span class="ts-req">*</span> Display Name</span>
-            <input class="ts-input" type="text" [ngModel]="c.displayName" (ngModelChange)="patch(c.id, { displayName: $event })" placeholder="e.g. Adult" maxlength="80" />
-            <small class="ts-help">Shown on the purchase form &amp; tickets (max 80 chars)</small>
-          </label>
-        </div>
-        <label class="ts-field">
-          <span class="ts-label">Description</span>
-          <textarea class="ts-input" rows="2" [ngModel]="c.description" (ngModelChange)="patch(c.id, { description: $event })" maxlength="180" placeholder="Shown to buyers (max 180 chars)"></textarea>
-        </label>
-
-        <!-- Pricing & VAT -->
-        <h3 class="ts-subhead">Pricing &amp; VAT</h3>
-        <div class="ts-tabs">
-          @for (m of pricingModels; track m.key) {
-            <button class="ts-tab" [class.active]="c.pricingModel === m.key" (click)="patch(c.id, { pricingModel: m.key })">{{ m.label }}</button>
-          }
-        </div>
-
-        <div class="ts-grid-2">
-          <label class="ts-field">
-            <span class="ts-label">Base Price</span>
-            <div class="ts-input-prefix">
-              <span class="ts-prefix">€</span>
-              <input class="ts-input" type="number" [ngModel]="c.basePrice" (ngModelChange)="patch(c.id, { basePrice: $event })" placeholder="0.00" />
-            </div>
-          </label>
-          <div class="ts-field">
-            <span class="ts-label">VAT Rate (%)</span>
-            <div class="ts-vat-row">
-              <label class="ts-check">
-                <input type="checkbox" [checked]="c.vatExempt" (change)="patch(c.id, { vatExempt: !c.vatExempt })" />
-                <span>VAT exempt</span>
-              </label>
-              <input class="ts-input ts-input-sm" type="number" [disabled]="c.vatExempt" [ngModel]="c.vatRate" (ngModelChange)="patch(c.id, { vatRate: $event })" placeholder="20" />
-            </div>
-          </div>
-        </div>
-
-        @if (c.pricingModel === 'theater') {
-          <div class="ts-grid-2">
-            <label class="ts-field">
-              <span class="ts-label">Starting Price</span>
-              <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c.startPrice" (ngModelChange)="patch(c.id, { startPrice: $event })" placeholder="0.00" /></div>
-            </label>
-            <label class="ts-field">
-              <span class="ts-label">End Price</span>
-              <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c.endPrice" (ngModelChange)="patch(c.id, { endPrice: $event })" placeholder="0.00" /></div>
-            </label>
-          </div>
-        }
-        @if (c.pricingModel === 'dynamic') {
-          <p class="ts-help">Dynamic pricing adjusts the price based on demand (unvouchered events only).</p>
-        }
-
-        <div class="ts-fee-row">
-          <span class="ts-label">Fee Type</span>
-          <label class="ts-radio">
-            <input type="radio" [name]="'fee-' + c.id" [checked]="c.feeType === 'commission'" (change)="patch(c.id, { feeType: 'commission' })" />
-            <span>Commission (deducted from base price)</span>
-          </label>
-          <label class="ts-radio">
-            <input type="radio" [name]="'fee-' + c.id" [checked]="c.feeType === 'agency'" (change)="patch(c.id, { feeType: 'agency' })" />
-            <span>Agency fee (added on top)</span>
-          </label>
-        </div>
-        <label class="ts-field ts-field-narrow">
-          <span class="ts-label">Fee amount</span>
-          <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c.feeAmount" (ngModelChange)="patch(c.id, { feeAmount: $event })" placeholder="0.00" /></div>
-        </label>
-
-        <!-- Capacity -->
-        <h3 class="ts-subhead">Capacity</h3>
-        <label class="ts-check">
-          <input type="checkbox" [checked]="c.matchCapacityWithSeats" (change)="patch(c.id, { matchCapacityWithSeats: !c.matchCapacityWithSeats })" />
-          <span>Match capacity with assigned seats on the seating map</span>
-        </label>
-        <label class="ts-field ts-field-narrow">
-          <span class="ts-label">Price category capacity</span>
-          <input class="ts-input" type="number" [disabled]="c.matchCapacityWithSeats" [ngModel]="c.capacity" (ngModelChange)="patch(c.id, { capacity: $event })" placeholder="e.g. 500" />
-          <small class="ts-help">Maximum tickets available for this price category</small>
-        </label>
-
-        <!-- Validity period -->
-        <h3 class="ts-subhead">Validity Period</h3>
-        <div class="ts-grid-2">
-          <label class="ts-field"><span class="ts-label">Ticket validity start</span><input class="ts-input" type="date" [ngModel]="c.validityStart" (ngModelChange)="patch(c.id, { validityStart: $event })" /></label>
-          <label class="ts-field"><span class="ts-label">Ticket validity end</span><input class="ts-input" type="date" [ngModel]="c.validityEnd" (ngModelChange)="patch(c.id, { validityEnd: $event })" /></label>
-        </div>
-
-        <!-- Sale schedule (date window OR cascade) -->
-        <h3 class="ts-subhead">Sale Schedule</h3>
-        <p class="ts-help" style="margin-top:-2px;">Pick how this category goes on sale.</p>
-        <div class="ts-schedule-modes">
-          <label class="ts-radio">
-            <input type="radio" [name]="'sched-' + c.id" [checked]="c.saleScheduleMode === 'date'" (change)="patch(c.id, { saleScheduleMode: 'date' })" />
-            <span>By date range</span>
-          </label>
-          <label class="ts-radio">
-            <input type="radio" [name]="'sched-' + c.id" [checked]="c.saleScheduleMode === 'after'" (change)="patch(c.id, { saleScheduleMode: 'after' })" />
-            <span>Start after another category sells out</span>
-          </label>
-        </div>
-
-        @if (c.saleScheduleMode === 'date') {
-          @if (inheritsEventWindow(c)) {
-            <p class="ts-schedule-inherit">
-              Leave empty to inherit the event-level sale window
-              ({{ saleStartDate() }} {{ saleStartTime() }} → {{ saleEndDate() }} {{ saleEndTime() }}).
-            </p>
-          }
-          <div class="ts-grid-2">
-            <label class="ts-field"><span class="ts-label">Sale start date</span><input class="ts-input" type="date" [ngModel]="c.saleStartDate" (ngModelChange)="patch(c.id, { saleStartDate: $event })" /></label>
-            <label class="ts-field"><span class="ts-label">Sale start time</span><input class="ts-input" type="time" [ngModel]="c.saleStartTime" (ngModelChange)="patch(c.id, { saleStartTime: $event })" /></label>
-            <label class="ts-field"><span class="ts-label">Sale end date</span><input class="ts-input" type="date" [ngModel]="c.saleEndDate" (ngModelChange)="patch(c.id, { saleEndDate: $event })" /></label>
-            <label class="ts-field"><span class="ts-label">Sale end time</span><input class="ts-input" type="time" [ngModel]="c.saleEndTime" (ngModelChange)="patch(c.id, { saleEndTime: $event })" /></label>
-          </div>
-          @if (saleWindowError(c); as err) {
-            <p class="ts-schedule-error">{{ err }}</p>
-          }
-        } @else {
-          <p class="ts-help">Activates when the source category reaches ≤ 1 ticket remaining — prevents a gap in sales.</p>
-          @if (cascadeSources(c.id).length === 0) {
-            <p class="ts-schedule-error">No saved categories yet — add one to the event first so it can be used as a source.</p>
-          } @else {
-            <label class="ts-field ts-field-narrow">
-              <span class="ts-label">Source category</span>
-              <select class="ts-input" [ngModel]="c.startAfterSource" (ngModelChange)="patch(c.id, { startAfterSource: $event })">
-                <option value="">Select source category…</option>
-                @for (n of cascadeSources(c.id); track n) { <option [value]="n">{{ n }}</option> }
-              </select>
-            </label>
-          }
-        }
-
-        <!-- Visibility -->
-        <h3 class="ts-subhead">Visibility &amp; Access</h3>
-        <div class="ts-checks">
-          <label class="ts-check"><input type="checkbox" [checked]="c.posOnly" (change)="patch(c.id, { posOnly: !c.posOnly })" /><span>Visible only at POS</span></label>
-          <label class="ts-check"><input type="checkbox" [checked]="c.personal" (change)="patch(c.id, { personal: !c.personal })" /><span>Personal price category (buyer info required)</span></label>
-          <label class="ts-check"><input type="checkbox" [checked]="c.accessCodeRequired" (change)="patch(c.id, { accessCodeRequired: !c.accessCodeRequired })" /><span>Requires access code</span></label>
-        </div>
-
-        <!-- Service fee by channel -->
-        <h3 class="ts-subhead">Service Fee by channel</h3>
-        <div class="ts-grid-3">
-          <label class="ts-field"><span class="ts-label">Marketplace %</span><input class="ts-input" type="number" [ngModel]="c.marketplaceFee" (ngModelChange)="patch(c.id, { marketplaceFee: $event })" placeholder="0" /></label>
-          <label class="ts-field"><span class="ts-label">Embedded %</span><input class="ts-input" type="number" [ngModel]="c.embeddedFee" (ngModelChange)="patch(c.id, { embeddedFee: $event })" placeholder="0" /></label>
-          <label class="ts-field"><span class="ts-label">POS %</span><input class="ts-input" type="number" [ngModel]="c.posFee" (ngModelChange)="patch(c.id, { posFee: $event })" placeholder="0" /></label>
-        </div>
-
-        <footer class="ts-draft-foot">
-          <button class="ts-btn ts-btn-primary" [disabled]="!canSave(c)" (click)="addToEvent(c.id)">
-            <mat-icon>Check</mat-icon>
-            Add to Event
-          </button>
-        </footer>
-      </article>
-    }
 
     <button class="ts-add-cat" (click)="addCategory()">
       <mat-icon>Add 1</mat-icon>
       Add Category
     </button>
 
-    <!-- Saved categories = sales overview -->
-    @if (saved().length > 0) {
-      <div class="ts-saved-head">Saved categories — sales overview</div>
-      <div class="ts-table-wrap">
-        <table class="ts-table">
-          <thead>
-            <tr>
-              <th>Price Category</th>
-              <th>VAT Rate</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Base Price</th>
-              <th>Surcharge</th>
-              <th>Portal Price</th>
-              <th>Dynamic</th>
-              <th>Reserved</th>
-              <th>Sold</th>
-              <th>Available</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (c of saved(); track c.id) {
-              <tr>
-                <td>
-                  <span class="ts-td-name">{{ c.displayName }}</span>
-                  <span class="ts-td-sub">{{ c.internalName }}</span>
-                </td>
-                <td>{{ c.vatExempt ? 'Exempt' : c.vatRate + '%' }}</td>
-                <td>{{ effectiveSaleStart(c) }}</td>
-                <td>{{ effectiveSaleEnd(c) }}</td>
-                <td>€{{ c.basePrice || '0' }}</td>
-                <td>€{{ surcharge(c) }}</td>
-                <td>€{{ portalPrice(c) }}</td>
-                <td><span class="ts-dot" [class.on]="c.pricingModel === 'dynamic'"></span></td>
-                <td>{{ c.reserved }}</td>
-                <td>{{ c.sold }}</td>
-                <td>{{ c.matchCapacityWithSeats ? '—' : available(c) }}</td>
-                <td class="ts-td-actions">
-                  <button class="ts-icon-btn" [matMenuTriggerFor]="rowMenu"><mat-icon>Vertical Menu</mat-icon></button>
-                  <mat-menu #rowMenu="matMenu">
-                    <button mat-menu-item (click)="editSaved(c.id)"><mat-icon>Pencil</mat-icon> Edit</button>
-                    <button mat-menu-item (click)="duplicateSaved(c.id)"><mat-icon>Copy 1</mat-icon> Duplicate</button>
-                    <button mat-menu-item (click)="deleteSaved(c.id)"><mat-icon>Trash</mat-icon> Delete</button>
-                  </mat-menu>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </section>
-
-  <!-- ===== Places ===== -->
-  <section class="ts-section" id="tk-places">
-    <div class="ts-sec-head">
-      <h2><mat-icon>Location Pin 1</mat-icon> Places</h2>
-      <p>Seated maps and general-admission pools.</p>
-    </div>
-    <div class="ts-place-row">
-      <label class="ts-radio">
-        <input type="radio" name="place-type" [checked]="placeType() === 'ga'" (change)="placeType.set('ga')" />
-        <span>General admission (pool)</span>
-      </label>
-      <label class="ts-radio">
-        <input type="radio" name="place-type" [checked]="placeType() === 'seated'" (change)="placeType.set('seated')" />
-        <span>Numbered seats</span>
-      </label>
-    </div>
-    @if (placeType() === 'ga') {
-      <label class="ts-field ts-field-narrow">
-        <span class="ts-label">Total capacity</span>
-        <input class="ts-input" type="number" [ngModel]="poolCapacity()" (ngModelChange)="poolCapacity.set($event)" placeholder="e.g. 500" />
-      </label>
-
-      @if (pools().length > 0) {
-        <div class="ts-pools">
-          @for (p of pools(); track p.id) {
-            <div class="ts-pool">
-              <div class="ts-pool-info">
-                <strong>{{ p.name || 'General admission pool' }}</strong>
-                <small>{{ p.categories.join(', ') }} · limit {{ p.capacity }}</small>
-              </div>
-              <button class="ts-icon-btn" (click)="removePool(p.id)" title="Remove pool"><mat-icon>Trash</mat-icon></button>
-            </div>
-          }
-        </div>
-      }
-      <button class="ts-add-cat" (click)="openPoolModal()">
-        <mat-icon>Add 1</mat-icon>
-        Add general admission pool
-      </button>
-    } @else {
-      <div class="ts-place-note">
-        <mat-icon>Information Circle</mat-icon>
-        Numbered seating is configured on the venue's audience plan.
-      </div>
-    }
   </section>
 
   <!-- ===== Ticket rules ===== -->
   <section class="ts-section" id="tk-rules">
     <div class="ts-sec-head">
       <h2><mat-icon>Cog 1</mat-icon> Ticket rules &amp; settings</h2>
-      <p>Per-order limits and low-availability warnings.</p>
+      <p>Buyer-side guardrails: min/max tickets per single order and whether to show a "low availability" badge near sell-out.</p>
     </div>
     <div class="ts-grid-2">
       <label class="ts-field">
@@ -411,4 +158,225 @@
       <span>Show "low availability" warning near sell-out</span>
     </label>
   </section>
+
+  <!-- ===== Price Information Display (demoted to bottom — Klára's feedback:
+       "I would maybe not show it if we keep it. Maybe I would not show it as the first one.") ===== -->
+  <section class="ts-section">
+    <div class="ts-sec-head">
+      <h2><mat-icon>Pin-Dollar</mat-icon> Price Information Display <span class="ts-optional-pill">optional</span></h2>
+      <p>Display-only summary for the public ticket page. Actual pricing is defined by your ticket types above.</p>
+    </div>
+    <label class="ts-field">
+      <span class="ts-label">Price Summary (for display)</span>
+      <input class="ts-input" type="text" [ngModel]="priceSummary()" (ngModelChange)="priceSummary.set($event)" placeholder="e.g. From €25 to €150, Free entry" />
+    </label>
+  </section>
+
+  <!-- ===== Sales overview (own section, separated from Price Categories
+       creation — different mental mode: post-publish monitoring vs. forward
+       configuration). ===== -->
+  @if (saved().length > 0) {
+    <section class="ts-section" id="tk-sales-overview">
+      <div class="ts-sec-head ts-sec-head-row">
+        <div class="ts-sec-head-text">
+          <h2><mat-icon>Pie Chart</mat-icon> Sales overview</h2>
+          <p>How your saved categories are selling. Switch between flat cards, table or grouped by pool.</p>
+        </div>
+        <div class="ts-overview-controls">
+          @if (availableLanguages().length > 1) {
+            <label class="ts-lang-picker" title="Show category names in this language">
+              <mat-icon>Translate Text</mat-icon>
+              <select [ngModel]="viewLang()" (ngModelChange)="viewLang.set($event)">
+                @for (l of availableLanguages(); track l.code) {
+                  <option [value]="l.code">{{ l.name }}</option>
+                }
+              </select>
+            </label>
+          }
+          <div class="ts-view-toggle" role="group" aria-label="View mode">
+            <button class="ts-view-toggle-btn" [class.active]="savedView() === 'cards'" (click)="savedView.set('cards')" type="button" title="Cards" aria-label="Cards">
+              <mat-icon>Dashboard Square</mat-icon>
+            </button>
+            <button class="ts-view-toggle-btn" [class.active]="savedView() === 'table'" (click)="savedView.set('table')" type="button" title="Table" aria-label="Table">
+              <mat-icon>Hamburger Menu 1</mat-icon>
+            </button>
+            <button class="ts-view-toggle-btn" [class.active]="savedView() === 'pool'" (click)="savedView.set('pool')" type="button" title="By pool" aria-label="Grouped by pool">
+              <mat-icon>Layers 1</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards (flat) -->
+      @if (savedView() === 'cards') {
+        <div class="ts-saved-cards">
+          @for (c of saved(); track c.id) {
+            <article class="ts-saved-card" [class.just-added]="justAddedId() === c.id">
+              <header class="ts-saved-card-head">
+                <div class="ts-saved-card-name">
+                  <span class="ts-saved-card-name-line">
+                    <strong>{{ nameInLang(c, viewLang()) }}</strong>
+                    @if (isFallback(c, viewLang())) {
+                      <span class="ts-lang-chip is-fallback" title="Not translated — showing English">EN</span>
+                    } @else if (viewLang() !== baseLang) {
+                      <span class="ts-lang-chip">{{ viewLang().toUpperCase() }}</span>
+                    }
+                  </span>
+                  <span class="ts-saved-card-sub">{{ c.internalName }}</span>
+                </div>
+                <button class="ts-icon-btn" [matMenuTriggerFor]="cm1"><mat-icon>Vertical Menu</mat-icon></button>
+                <mat-menu #cm1="matMenu">
+                  <button mat-menu-item (click)="editSaved(c.id)"><mat-icon>Pencil</mat-icon> Edit</button>
+                  <button mat-menu-item (click)="duplicateSaved(c.id)"><mat-icon>Copy 1</mat-icon> Duplicate</button>
+                  <button mat-menu-item (click)="deleteSaved(c.id)"><mat-icon>Trash</mat-icon> Delete</button>
+                </mat-menu>
+              </header>
+              @if (c.description) { <p class="ts-saved-card-desc">{{ c.description }}</p> }
+              <div class="ts-saved-card-stats">
+                <div class="ts-saved-stat"><span class="ts-saved-stat-k">Base price</span><span class="ts-saved-stat-v">€{{ c.basePrice || '0' }}</span></div>
+                <div class="ts-saved-stat"><span class="ts-saved-stat-k">Portal price</span><span class="ts-saved-stat-v">€{{ portalPrice(c) }}</span></div>
+                <div class="ts-saved-stat"><span class="ts-saved-stat-k">VAT</span><span class="ts-saved-stat-v">{{ c.vatExempt ? 'Exempt' : c.vatRate + '%' }}</span></div>
+                <div class="ts-saved-stat"><span class="ts-saved-stat-k">Sold</span><span class="ts-saved-stat-v">{{ c.sold }} / {{ c.matchCapacityWithSeats ? '—' : (c.capacity || '∞') }}</span></div>
+              </div>
+              <div class="ts-saved-card-meta">
+                <span class="ts-saved-meta-pill"><mat-icon>Layers 1</mat-icon> {{ poolName(c.poolId) }}</span>
+                <span class="ts-saved-meta-pill"><mat-icon>Circle Clock</mat-icon> {{ effectiveSaleStart(c) }} → {{ effectiveSaleEnd(c) }}</span>
+                @if (c.pricingModel === 'dynamic') { <span class="ts-saved-meta-pill is-dynamic">Dynamic pricing</span> }
+                @if (c.reserved > 0) { <span class="ts-saved-meta-pill">{{ c.reserved }} reserved</span> }
+              </div>
+              <div class="ts-saved-card-bar">
+                <div class="ts-saved-card-bar-track">
+                  <div class="ts-saved-card-bar-fill" [style.width.%]="c.capacity ? (c.sold / num(c.capacity)) * 100 : 0"></div>
+                </div>
+                <span class="ts-saved-card-bar-label">{{ c.matchCapacityWithSeats ? '—' : available(c) }} available</span>
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+      <!-- Table -->
+      @if (savedView() === 'table') {
+        <div class="ts-table-wrap">
+          <table class="ts-table">
+            <thead>
+              <tr>
+                <th>Price Category</th>
+                <th>Pool</th>
+                <th>VAT Rate</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Base Price</th>
+                <th>Surcharge</th>
+                <th>Portal Price</th>
+                <th>Dynamic</th>
+                <th>Reserved</th>
+                <th>Sold</th>
+                <th>Available</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of saved(); track c.id) {
+                <tr>
+                  <td>
+                    <span class="ts-td-name-line">
+                      <span class="ts-td-name">{{ nameInLang(c, viewLang()) }}</span>
+                      @if (isFallback(c, viewLang())) {
+                        <span class="ts-lang-chip is-fallback" title="Not translated — showing English">EN</span>
+                      } @else if (viewLang() !== baseLang) {
+                        <span class="ts-lang-chip">{{ viewLang().toUpperCase() }}</span>
+                      }
+                    </span>
+                    <span class="ts-td-sub">{{ c.internalName }}</span>
+                  </td>
+                  <td>{{ poolName(c.poolId) }}</td>
+                  <td>{{ c.vatExempt ? 'Exempt' : c.vatRate + '%' }}</td>
+                  <td>{{ effectiveSaleStart(c) }}</td>
+                  <td>{{ effectiveSaleEnd(c) }}</td>
+                  <td>€{{ c.basePrice || '0' }}</td>
+                  <td>€{{ surcharge(c) }}</td>
+                  <td>€{{ portalPrice(c) }}</td>
+                  <td><span class="ts-dot" [class.on]="c.pricingModel === 'dynamic'"></span></td>
+                  <td>{{ c.reserved }}</td>
+                  <td>{{ c.sold }}</td>
+                  <td>{{ c.matchCapacityWithSeats ? '—' : available(c) }}</td>
+                  <td class="ts-td-actions">
+                    <button class="ts-icon-btn" [matMenuTriggerFor]="tm1"><mat-icon>Vertical Menu</mat-icon></button>
+                    <mat-menu #tm1="matMenu">
+                      <button mat-menu-item (click)="editSaved(c.id)"><mat-icon>Pencil</mat-icon> Edit</button>
+                      <button mat-menu-item (click)="duplicateSaved(c.id)"><mat-icon>Copy 1</mat-icon> Duplicate</button>
+                      <button mat-menu-item (click)="deleteSaved(c.id)"><mat-icon>Trash</mat-icon> Delete</button>
+                    </mat-menu>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <!-- By pool -->
+      @if (savedView() === 'pool') {
+        <div class="ts-pool-groups">
+          @for (g of groupedSavedByPool(); track g.pool.id) {
+            <div class="ts-pool-group" [class.is-orphan]="g.pool.id === '__orphan'">
+              <header class="ts-pool-group-head">
+                <div class="ts-pool-group-title">
+                  <mat-icon>Layers 1</mat-icon>
+                  <strong>{{ g.pool.name }}</strong>
+                  @if (g.pool.id !== '__orphan') {
+                    <span class="ts-pool-group-sub">capacity {{ g.pool.capacity || '∞' }} · {{ poolRollup(g.pool.id).sold }} sold · {{ poolRollup(g.pool.id).reserved }} reserved</span>
+                  } @else {
+                    <span class="ts-pool-group-sub ts-pool-group-warn">⚠ Categories with no pool assigned</span>
+                  }
+                </div>
+                <span class="ts-pool-group-count">{{ g.categories.length }} {{ g.categories.length === 1 ? 'category' : 'categories' }}</span>
+              </header>
+              @if (g.categories.length === 0) {
+                <div class="ts-pool-empty">No categories assigned to this pool yet.</div>
+              } @else {
+                <div class="ts-saved-cards">
+                  @for (c of g.categories; track c.id) {
+                    <article class="ts-saved-card" [class.just-added]="justAddedId() === c.id">
+                      <header class="ts-saved-card-head">
+                        <div class="ts-saved-card-name">
+                          <span class="ts-saved-card-name-line">
+                            <strong>{{ nameInLang(c, viewLang()) }}</strong>
+                            @if (isFallback(c, viewLang())) {
+                              <span class="ts-lang-chip is-fallback" title="Not translated — showing English">EN</span>
+                            } @else if (viewLang() !== baseLang) {
+                              <span class="ts-lang-chip">{{ viewLang().toUpperCase() }}</span>
+                            }
+                          </span>
+                          <span class="ts-saved-card-sub">{{ c.internalName }}</span>
+                        </div>
+                        <button class="ts-icon-btn" [matMenuTriggerFor]="pm1"><mat-icon>Vertical Menu</mat-icon></button>
+                        <mat-menu #pm1="matMenu">
+                          <button mat-menu-item (click)="editSaved(c.id)"><mat-icon>Pencil</mat-icon> Edit</button>
+                          <button mat-menu-item (click)="duplicateSaved(c.id)"><mat-icon>Copy 1</mat-icon> Duplicate</button>
+                          <button mat-menu-item (click)="deleteSaved(c.id)"><mat-icon>Trash</mat-icon> Delete</button>
+                        </mat-menu>
+                      </header>
+                      @if (c.description) { <p class="ts-saved-card-desc">{{ c.description }}</p> }
+                      <div class="ts-saved-card-stats">
+                        <div class="ts-saved-stat"><span class="ts-saved-stat-k">Base</span><span class="ts-saved-stat-v">€{{ c.basePrice || '0' }}</span></div>
+                        <div class="ts-saved-stat"><span class="ts-saved-stat-k">Sold</span><span class="ts-saved-stat-v">{{ c.sold }} / {{ c.matchCapacityWithSeats ? '—' : (c.capacity || '∞') }}</span></div>
+                      </div>
+                      <div class="ts-saved-card-bar">
+                        <div class="ts-saved-card-bar-track">
+                          <div class="ts-saved-card-bar-fill" [style.width.%]="c.capacity ? (c.sold / num(c.capacity)) * 100 : 0"></div>
+                        </div>
+                        <span class="ts-saved-card-bar-label">{{ c.matchCapacityWithSeats ? '—' : available(c) }} available</span>
+                      </div>
+                    </article>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
 }

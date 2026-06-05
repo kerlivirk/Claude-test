@@ -1,0 +1,220 @@
+<div class="pcd-dialog">
+  <header class="pcd-head">
+    <h1>{{ data.isEdit ? 'Edit price category' : 'Add price category' }}</h1>
+    <button class="pcd-close" (click)="cancel()" aria-label="Close"><mat-icon>Delete 1</mat-icon></button>
+  </header>
+
+  <div class="pcd-body">
+
+    <!-- Naming & description -->
+    <h3 class="ts-subhead pcd-first">Naming &amp; Description</h3>
+
+    <div class="ts-field">
+      <app-translations-field
+        [fields]="displayNameFields"
+        [languages]="data.languages"
+        [baseLang]="data.baseLang"
+        [values]="valuesForField('displayName')"
+        (valuesChange)="applyFieldValues('displayName', $event)" />
+      <small class="ts-help">Visible on the purchase form and tickets (max 80 chars). Click <strong>+</strong> on the language bar to translate.</small>
+    </div>
+
+    <label class="ts-field">
+      <span class="ts-label"><span class="ts-req">*</span> Internal Name</span>
+      <input class="ts-input" type="text" [ngModel]="c().internalName" (ngModelChange)="patch({ internalName: $event })" placeholder="e.g. Weekend Animals · 100 pcs until 21.07.2026" />
+      <small class="ts-help">Admin-only quick-scan identifier.</small>
+    </label>
+
+    <label class="ts-field">
+      <span class="ts-label">Subcategory</span>
+      <div class="ts-type-row">
+        <select class="ts-input" [ngModel]="c().ticketType" (ngModelChange)="patch({ ticketType: $event })">
+          @for (t of ticketTypes(); track t.id) { <option [value]="t.id">{{ t.name }}</option> }
+        </select>
+        <button class="ts-link-btn" (click)="startAddType()">+ Add</button>
+      </div>
+      <small class="ts-help">Reusable price-bucket type (Standard / Reduced / Season pass / …).</small>
+    </label>
+    @if (addingType()) {
+      <div class="ts-newtype">
+        <input class="ts-input" type="text" [ngModel]="newTypeName()" (ngModelChange)="newTypeName.set($event)" placeholder="New ticket type name" />
+        <button class="ts-btn ts-btn-primary" (click)="confirmAddType()">Add type</button>
+        <button class="ts-btn ts-btn-ghost" (click)="cancelAddType()">Cancel</button>
+      </div>
+    }
+
+    @if (data.placeType === 'ga') {
+      <label class="ts-field">
+        <span class="ts-label"><span class="ts-req">*</span> Pool</span>
+        <select class="ts-input" [ngModel]="c().poolId" (ngModelChange)="patch({ poolId: $event })">
+          <option value="">Select pool…</option>
+          @for (p of data.pools; track p.id) {
+            <option [value]="p.id">{{ p.name }} · capacity {{ p.capacity || '∞' }}</option>
+          }
+        </select>
+        <small class="ts-help">Which pool this category pulls from. Pools are defined in Tickets setup.</small>
+      </label>
+    }
+
+    <div class="ts-field">
+      <app-translations-field
+        [fields]="descriptionFields"
+        [languages]="data.languages"
+        [baseLang]="data.baseLang"
+        [values]="valuesForField('description')"
+        (valuesChange)="applyFieldValues('description', $event)" />
+      <small class="ts-help">Visible on the purchase form (max 190 chars). Use it to clarify what's included, who's eligible, or time windows.</small>
+    </div>
+
+    <!-- Pricing & Fees -->
+    <h3 class="ts-subhead">Pricing &amp; Fees</h3>
+    <p class="ts-help" style="margin-top:-4px; margin-bottom:14px;">Base price, VAT, and any service fees added on top of (or deducted from) the price for each sales channel.</p>
+
+    <span class="ts-mini-head">Base pricing</span>
+    <div class="ts-tabs">
+      @for (m of pricingModels; track m.key) {
+        <button class="ts-tab" [class.active]="c().pricingModel === m.key" (click)="patch({ pricingModel: m.key })">{{ m.label }}</button>
+      }
+    </div>
+
+    <div class="ts-grid-2">
+      <label class="ts-field">
+        <span class="ts-label">Base Price</span>
+        <div class="ts-input-prefix">
+          <span class="ts-prefix">€</span>
+          <input class="ts-input" type="number" [ngModel]="c().basePrice" (ngModelChange)="patch({ basePrice: $event })" placeholder="0.00" />
+        </div>
+      </label>
+      <div class="ts-field">
+        <span class="ts-label">VAT Rate (%)</span>
+        <div class="ts-vat-row">
+          <label class="ts-check">
+            <input type="checkbox" [checked]="c().vatExempt" (change)="patch({ vatExempt: !c().vatExempt })" />
+            <span>VAT exempt</span>
+          </label>
+          <input class="ts-input ts-input-sm" type="number" [disabled]="c().vatExempt" [ngModel]="c().vatRate" (ngModelChange)="patch({ vatRate: $event })" placeholder="20" />
+        </div>
+      </div>
+    </div>
+
+    @if (c().pricingModel === 'theater') {
+      <div class="ts-grid-2">
+        <label class="ts-field">
+          <span class="ts-label">Starting Price</span>
+          <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c().startPrice" (ngModelChange)="patch({ startPrice: $event })" placeholder="0.00" /></div>
+        </label>
+        <label class="ts-field">
+          <span class="ts-label">End Price</span>
+          <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c().endPrice" (ngModelChange)="patch({ endPrice: $event })" placeholder="0.00" /></div>
+        </label>
+      </div>
+    }
+    @if (c().pricingModel === 'dynamic') {
+      <p class="ts-help">Dynamic pricing adjusts the price based on demand (unvouchered events only).</p>
+    }
+
+    <span class="ts-mini-head">Fees</span>
+    <div class="ts-fee-row">
+      <span class="ts-label">Fee Type</span>
+      <label class="ts-radio">
+        <input type="radio" name="fee" [checked]="c().feeType === 'commission'" (change)="patch({ feeType: 'commission' })" />
+        <span>Commission (deducted from base price)</span>
+      </label>
+      <label class="ts-radio">
+        <input type="radio" name="fee" [checked]="c().feeType === 'agency'" (change)="patch({ feeType: 'agency' })" />
+        <span>Agency fee (added on top)</span>
+      </label>
+    </div>
+    <label class="ts-field ts-field-narrow">
+      <span class="ts-label">Fee amount</span>
+      <div class="ts-input-prefix"><span class="ts-prefix">€</span><input class="ts-input" type="number" [ngModel]="c().feeAmount" (ngModelChange)="patch({ feeAmount: $event })" placeholder="0.00" /></div>
+    </label>
+
+    <span class="ts-mini-head">Per-channel service fees (%)</span>
+    <div class="ts-grid-3">
+      <label class="ts-field"><span class="ts-label">Marketplace</span><input class="ts-input" type="number" [ngModel]="c().marketplaceFee" (ngModelChange)="patch({ marketplaceFee: $event })" placeholder="0" /></label>
+      <label class="ts-field"><span class="ts-label">Embedded</span><input class="ts-input" type="number" [ngModel]="c().embeddedFee" (ngModelChange)="patch({ embeddedFee: $event })" placeholder="0" /></label>
+      <label class="ts-field"><span class="ts-label">POS</span><input class="ts-input" type="number" [ngModel]="c().posFee" (ngModelChange)="patch({ posFee: $event })" placeholder="0" /></label>
+    </div>
+
+    <!-- Capacity -->
+    <h3 class="ts-subhead">Capacity</h3>
+    @if (data.placeType === 'seated') {
+      <label class="ts-check">
+        <input type="checkbox" [checked]="c().matchCapacityWithSeats" (change)="patch({ matchCapacityWithSeats: !c().matchCapacityWithSeats })" />
+        <span>Match capacity with assigned seats on the seating map</span>
+      </label>
+    }
+    <label class="ts-field ts-field-narrow">
+      <span class="ts-label">Price category capacity</span>
+      <input class="ts-input" type="number" [disabled]="data.placeType === 'seated' && c().matchCapacityWithSeats" [ngModel]="c().capacity" (ngModelChange)="patch({ capacity: $event })" placeholder="e.g. 500" />
+      <small class="ts-help">Maximum tickets available for this price category. Leave empty for unlimited.</small>
+    </label>
+
+    <!-- Sale schedule -->
+    <h3 class="ts-subhead">Sale Schedule</h3>
+    <p class="ts-help" style="margin-top:-2px;">Pick how this category goes on sale.</p>
+    <div class="ts-schedule-modes">
+      <label class="ts-radio">
+        <input type="radio" name="sched" [checked]="c().saleScheduleMode === 'date'" (change)="patch({ saleScheduleMode: 'date' })" />
+        <span>By date range</span>
+      </label>
+      <label class="ts-radio">
+        <input type="radio" name="sched" [checked]="c().saleScheduleMode === 'after'" (change)="patch({ saleScheduleMode: 'after' })" />
+        <span>Start after another category sells out</span>
+      </label>
+    </div>
+
+    @if (c().saleScheduleMode === 'date') {
+      @if (inheritsEventWindow()) {
+        <p class="ts-schedule-inherit">
+          Leave empty to inherit the event-level sale window
+          ({{ data.eventSaleWindow.startDate }} {{ data.eventSaleWindow.startTime }} → {{ data.eventSaleWindow.endDate }} {{ data.eventSaleWindow.endTime }}).
+        </p>
+      }
+      <div class="ts-grid-2">
+        <label class="ts-field"><span class="ts-label">Sale start date</span><input class="ts-input" type="date" [ngModel]="c().saleStartDate" (ngModelChange)="patch({ saleStartDate: $event })" /></label>
+        <label class="ts-field"><span class="ts-label">Sale start time</span><input class="ts-input" type="time" [ngModel]="c().saleStartTime" (ngModelChange)="patch({ saleStartTime: $event })" /></label>
+        <label class="ts-field"><span class="ts-label">Sale end date</span><input class="ts-input" type="date" [ngModel]="c().saleEndDate" (ngModelChange)="patch({ saleEndDate: $event })" /></label>
+        <label class="ts-field"><span class="ts-label">Sale end time</span><input class="ts-input" type="time" [ngModel]="c().saleEndTime" (ngModelChange)="patch({ saleEndTime: $event })" /></label>
+      </div>
+      @if (saleWindowError(); as err) {
+        <p class="ts-schedule-error">{{ err }}</p>
+      }
+    } @else {
+      <p class="ts-help">Activates when the source category reaches ≤ 1 ticket remaining — prevents a gap in sales.</p>
+      @if (data.cascadeSources.length === 0) {
+        <p class="ts-schedule-error">No other saved categories yet — add one first so it can be used as a source.</p>
+      } @else {
+        <label class="ts-field ts-field-narrow">
+          <span class="ts-label">Source category</span>
+          <select class="ts-input" [ngModel]="c().startAfterSource" (ngModelChange)="patch({ startAfterSource: $event })">
+            <option value="">Select source category…</option>
+            @for (n of data.cascadeSources; track n) { <option [value]="n">{{ n }}</option> }
+          </select>
+        </label>
+      }
+    }
+
+    <!-- Visibility -->
+    <h3 class="ts-subhead">Visibility &amp; Access</h3>
+    <div class="ts-checks">
+      <label class="ts-check"><input type="checkbox" [checked]="c().posOnly" (change)="patch({ posOnly: !c().posOnly })" /><span>Visible only at POS</span></label>
+      <label class="ts-check"><input type="checkbox" [checked]="c().personal" (change)="patch({ personal: !c().personal })" /><span>Personal price category (buyer info required)</span></label>
+      <label class="ts-check"><input type="checkbox" [checked]="c().accessCodeRequired" (change)="patch({ accessCodeRequired: !c().accessCodeRequired })" /><span>Requires access code</span></label>
+    </div>
+  </div>
+
+  <footer class="pcd-foot">
+    @if (!data.isEdit) {
+      <small class="pcd-foot-hint">Saved category will appear in <strong>Sales overview</strong> below.</small>
+    }
+    <div class="pcd-foot-actions">
+      <button class="ts-btn ts-btn-ghost" (click)="cancel()">Cancel</button>
+      <button class="ts-btn ts-btn-primary" [disabled]="!canSave()" (click)="save()">
+        <mat-icon>Check</mat-icon>
+        {{ data.isEdit ? 'Save changes' : 'Add to Event' }}
+      </button>
+    </div>
+  </footer>
+</div>

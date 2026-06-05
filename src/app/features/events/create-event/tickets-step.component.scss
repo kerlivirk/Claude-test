@@ -79,18 +79,31 @@
   color: var(--ts-fg-muted);
 
   mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  &.ts-notice-warning {
+    background: #fff4d6;
+    color: #6b4f00;
+    border: 1px solid #f1d27a;
+    mat-icon { color: #b8860b; }
+  }
 }
 
 /* ===== Fields ===== */
-.ts-field { display: flex; flex-direction: column; margin-top: 14px; }
+/* More breathing room between distinct fields (Displayed Name, Internal Name,
+   Subcategory etc.) — previously they were stacked too tight, especially when
+   one is a translations widget. */
+.ts-field { display: flex; flex-direction: column; margin-top: 22px; }
+.ts-field:first-of-type { margin-top: 12px; }
 .ts-field:first-child { margin-top: 0; }
 .ts-field-narrow { max-width: 280px; }
 
+/* Field labels: bigger + bolder than the help text under them, to keep the
+   "label → input → description" hierarchy visually correct. */
 .ts-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font: 500 12px/16px Mulish, sans-serif;
+  font: 600 14px/20px Mulish, sans-serif;
   color: var(--ts-fg);
   margin-bottom: 6px;
 }
@@ -120,7 +133,83 @@ textarea.ts-input { height: auto; padding: 10px 12px; resize: vertical; }
   .ts-input { padding-left: 28px; }
 }
 
-.ts-help { margin: 4px 0 0; font: 400 12px/16px Mulish, sans-serif; color: var(--ts-fg-muted); }
+/* Bumped from 12/16 → 13/18 — the explanatory text under inputs is the
+   most-read copy on the page; it needs to read comfortably. */
+.ts-help { margin: 6px 0 0; font: 400 13px/18px Mulish, sans-serif; color: var(--ts-fg-muted); }
+/* Help text after a translations widget — keep it tight to the input so it
+   reads as "explanation of that input", not as a separate paragraph. */
+app-translations-field + .ts-help { margin-top: 0; padding-top: 4px; }
+
+/* "optional" pill next to a section title — signals the section can be skipped */
+.ts-optional-pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font: 600 10px/16px Mulish, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ts-fg-muted);
+  background: var(--ts-surface-tint);
+  border-radius: 9999px;
+  vertical-align: middle;
+}
+
+/* ===== Subcategories (optional child price points under a Category) ===== */
+.ts-subcat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.ts-subcat-head {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px 32px;
+  gap: 10px;
+  padding: 0 4px;
+  font: 600 11px/16px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.ts-subcat-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px 32px;
+  align-items: center;
+  gap: 10px;
+
+  .ts-input { height: 32px; padding: 0 10px; font-size: 13px; }
+}
+
+/* ===== Advanced (collapsible — hides legacy "Predefined ticket type") ===== */
+.ts-advanced {
+  margin-top: 20px;
+  border-top: 1px dashed var(--ts-surface-tint);
+  padding-top: 14px;
+}
+.ts-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+  font: 600 12px/18px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+  cursor: pointer;
+
+  &:hover { color: var(--ts-fg); }
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+.ts-advanced-hint {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ts-fg-muted);
+}
+.ts-advanced-content {
+  margin-top: 10px;
+}
 
 /* ===== Sale schedule panel (per-category) ===== */
 .ts-schedule-modes {
@@ -148,11 +237,27 @@ textarea.ts-input { height: auto; padding: 10px 12px; resize: vertical; }
 .ts-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
 
 .ts-subhead {
-  margin: 20px 0 6px;
-  font: 700 13px/18px Mulish, sans-serif;
+  /* More space between distinct sections (Pricing, Fees, Capacity, …) so
+     they read as separate topics, not a wall of fields. */
+  margin: 36px 0 8px;
+  /* Bumped to 15/20 so subhead stays visually above the 14px field labels. */
+  font: 700 15px/20px Mulish, sans-serif;
   color: var(--ts-fg);
-  padding-top: 14px;
-  border-top: 1px solid var(--ts-surface-tint);
+  padding-top: 24px;
+  /* Darker separator so sections inside a category card read as distinct. */
+  border-top: 1px solid #c9c2d6;
+}
+
+/* Mini-heading: groups related items inside a subsection without the full
+   subhead weight + separator. Used inside "Pricing & Fees" to mark the
+   Base pricing / Fees / Per-channel sub-groups. */
+.ts-mini-head {
+  display: block;
+  margin: 24px 0 8px;
+  font: 700 13px/18px Mulish, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ts-fg-muted);
 }
 
 /* ===== Checks / radios ===== */
@@ -243,7 +348,14 @@ textarea.ts-input { height: auto; padding: 10px 12px; resize: vertical; }
 }
 .ts-newtype { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 
-.ts-draft-foot { margin-top: 18px; display: flex; justify-content: flex-end; }
+.ts-draft-foot {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.ts-draft-foot-hint { text-align: right; }
 
 /* ===== Buttons ===== */
 .ts-btn {
@@ -286,14 +398,25 @@ textarea.ts-input { height: auto; padding: 10px 12px; resize: vertical; }
   mat-icon { font-size: 16px; width: 16px; height: 16px; }
 }
 
-/* ===== Saved table ===== */
-.ts-table-wrap { border: 1px solid var(--ts-stroke); border-radius: 12px; overflow: hidden; }
+/* ===== Saved table =====
+   Caps body height so a long list scrolls inside a fixed area (parity with
+   the cards view). Header stays sticky so column meanings remain visible. */
+.ts-table-wrap {
+  border: 1px solid var(--ts-stroke);
+  border-radius: 12px;
+  max-height: 640px;
+  overflow: auto;
+}
 .ts-table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   font: 400 13px/18px Mulish, sans-serif;
 
-  th {
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     text-align: left;
     background: var(--ts-surface-soft);
     color: var(--ts-fg-muted);
@@ -311,10 +434,319 @@ textarea.ts-input { height: auto; padding: 10px 12px; resize: vertical; }
 .ts-td-sub { display: block; font-size: 11px; color: var(--ts-fg-muted); }
 .ts-td-actions { text-align: right; }
 
-.ts-table-wrap { overflow-x: auto; }
-.ts-table { min-width: 720px; }
+.ts-saved-head { font: 700 12px/16px Mulish, sans-serif; text-transform: uppercase; letter-spacing: .5px; color: var(--ts-fg-muted); }
 
-.ts-saved-head { margin: 18px 0 8px; font: 700 11px/16px Mulish, sans-serif; text-transform: uppercase; letter-spacing: .5px; color: var(--ts-fg-muted); text-align: center; }
+/* Row that holds the header text + view toggle. */
+.ts-saved-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 24px 0 12px;
+}
+
+/* Cards/Table toggle — matches the events-list pattern. */
+.ts-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  background: var(--ts-stroke);
+  border-radius: 8px;
+}
+.ts-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ts-fg-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+
+  &:hover { color: var(--ts-fg); }
+  &.active {
+    background: #fff;
+    color: var(--ts-fg);
+    box-shadow: 0 1px 2px rgba(17, 0, 43, 0.08);
+  }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+/* ===== Saved categories as cards ===== */
+.ts-saved-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  /* Cap the height so 4-ish cards fit before scrolling kicks in. Keeps the
+     Sales overview from blowing out the page when there are many categories. */
+  max-height: 640px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+/* Inside a pool group, individual groups have their own (smaller) limit
+   so a single pool with many categories doesn't dominate. */
+.ts-pool-group .ts-saved-cards {
+  max-height: 460px;
+}
+.ts-saved-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+
+  &:hover { border-color: #c9c2d6; box-shadow: 0 2px 8px -4px rgba(17, 0, 43, 0.08); }
+}
+.ts-saved-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.ts-saved-card-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+
+  strong { font: 700 14px/18px Mulish, sans-serif; color: var(--ts-fg); }
+}
+.ts-saved-card-sub {
+  font: 400 12px/16px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ts-saved-card-desc {
+  margin: 0;
+  font: 400 12px/16px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ts-saved-card-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 12px;
+  padding: 8px 10px;
+  background: #fafaff;
+  border-radius: 8px;
+}
+.ts-saved-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.ts-saved-stat-k {
+  font: 600 10px/14px Mulish, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ts-fg-muted);
+}
+.ts-saved-stat-v {
+  font: 700 14px/18px Mulish, sans-serif;
+  color: var(--ts-fg);
+}
+.ts-saved-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ts-saved-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 10px;
+  background: var(--ts-surface-tint);
+  border-radius: 9999px;
+  font: 500 11px/22px Mulish, sans-serif;
+  color: var(--ts-fg);
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; color: var(--ts-fg-muted); }
+
+  &.is-dynamic {
+    background: #ddfbea;
+    color: #0e6b3a;
+  }
+}
+.ts-saved-card-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ts-saved-card-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--ts-stroke);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.ts-saved-card-bar-fill {
+  height: 100%;
+  background: #7b5aa8;
+  border-radius: 9999px;
+  transition: width 200ms ease;
+}
+.ts-saved-card-bar-label {
+  font: 500 11px/14px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+  align-self: flex-end;
+}
+
+/* Section header layout when there's a control on the right (e.g. the
+   3-button view toggle in Sales overview). */
+.ts-sec-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+/* Language chip — shown next to translated names so the language is obvious */
+.ts-lang-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  background: #ddfbea;
+  color: #19633d;
+  border-radius: 4px;
+  font: 700 10px/18px Mulish, sans-serif;
+  letter-spacing: 0.4px;
+
+  /* Fallback variant — shown when the picked language has no translation
+     for this category and we're showing English instead. */
+  &.is-fallback {
+    background: #f1ebfb;
+    color: #6d5f79;
+  }
+}
+
+/* Sales overview right-side controls: language picker + 3-button view toggle */
+.ts-overview-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.ts-lang-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 8px;
+  background: #fff;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 8px;
+  font: 600 12px/16px Mulish, sans-serif;
+  color: var(--ts-fg);
+  cursor: pointer;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; color: var(--ts-fg-muted); }
+  select { height: 28px; border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; outline: none; padding: 0 4px; }
+}
+
+/* Just-added flash — runs once when a category is freshly added to Event */
+@keyframes ts-just-added-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(123, 90, 168, 0.45); background: #faf4ff; }
+  100% { box-shadow: 0 0 0 0 rgba(123, 90, 168, 0); background: #fff; }
+}
+.ts-saved-card.just-added {
+  animation: ts-just-added-flash 2.2s ease-out;
+  border-color: #7b5aa8;
+}
+
+/* Trailing arrow on the Add-to-Event button — hints "moves down to the table" */
+.ts-btn-trail {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-left: 6px;
+  opacity: 0.85;
+}
+
+/* Stacked translated-name lines in the saved-overview card and table. */
+.ts-saved-card-name-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.ts-td-name-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+/* ===== Sales overview: By-pool grouping ===== */
+.ts-pool-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.ts-pool-group {
+  padding: 14px;
+  background: #fafaff;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 12px;
+
+  &.is-orphan {
+    background: #fff4d6;
+    border-color: #f1d27a;
+  }
+}
+.ts-pool-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ts-stroke);
+}
+.ts-pool-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: #7b5aa8; }
+  strong { font: 700 14px/20px Mulish, sans-serif; color: var(--ts-fg); }
+}
+.ts-pool-group-sub {
+  font: 500 12px/16px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+}
+.ts-pool-group-warn { color: #8c5a00; }
+.ts-pool-group-count {
+  height: 22px;
+  padding: 0 10px;
+  background: #fff;
+  border: 1px solid var(--ts-stroke);
+  border-radius: 9999px;
+  font: 600 11px/22px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+  white-space: nowrap;
+}
+.ts-pool-empty {
+  padding: 14px;
+  background: #fff;
+  border: 1px dashed var(--ts-stroke);
+  border-radius: 8px;
+  text-align: center;
+  font: 400 12px/16px Mulish, sans-serif;
+  color: var(--ts-fg-muted);
+}
 .ts-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d8d2e0; }
 .ts-dot.on { background: var(--ts-purple); }
 .ts-pools { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }

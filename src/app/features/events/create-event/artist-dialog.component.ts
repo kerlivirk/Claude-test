@@ -63,14 +63,23 @@ type Page = 'menu' | 'profile' | 'slot' | 'members' | 'member';
           }
 
           @case ('slot') {
-            <span class="ad-label">Role</span>
+            <p class="ad-intro">
+              A <strong>slot</strong> is one artist's appearance on this event — their role on the bill and when they go on stage. Slot data lives on the event, not on the artist record.
+            </p>
+            <span class="ad-label">Role on the bill</span>
             <div class="ad-seg">
               @for (r of roles; track r) {
                 <button class="ad-seg-btn" [class.active]="slot.role === r" (click)="slot.role = r">{{ roleLabel(r) }}</button>
               }
             </div>
-            <span class="ad-label">Time on stage</span>
+            <p class="ad-help">
+              <strong>Headliner</strong> — the main act, usually closing the night.<br />
+              <strong>Support</strong> — a billed act performing alongside the headliner.<br />
+              <strong>Opener</strong> — the first act, warms up the audience.
+            </p>
+            <span class="ad-label">Stage time (start)</span>
             <input class="ad-input" type="time" [ngModel]="slot.time" (ngModelChange)="slot.time = $event" />
+            <p class="ad-help">When this artist begins their set. Leave empty if the running order isn't published yet.</p>
           }
 
           @case ('members') {
@@ -139,6 +148,12 @@ type Page = 'menu' | 'profile' | 'slot' | 'members' | 'member';
     .ad-label { display: inline-flex; gap: 6px; align-items: center; font: 500 12px/16px Mulish, sans-serif; margin: 14px 0 6px; }
     .ad-label:first-child { margin-top: 0; }
     .ad-lang { height: 18px; padding: 0 6px; background: #ddfbea; color: #19633d; border-radius: 9999px; font: 600 10px/18px Mulish, sans-serif; }
+    /* Intro paragraph at the top of a sub-page (explains what this page is for). */
+    .ad-intro { margin: 0 0 14px; padding: 10px 12px; background: #faf8ff; border-left: 3px solid #c8b6e7; border-radius: 6px; font: 400 13px/18px Mulish, sans-serif; color: #2a1c44; }
+    .ad-intro strong { font-weight: 700; }
+    /* Help text under a field (explains options or expected input). */
+    .ad-help { margin: 6px 0 0; font: 400 12px/17px Mulish, sans-serif; color: #6d5f79; }
+    .ad-help strong { font-weight: 700; color: #2a1c44; }
     .ad-input { width: 100%; padding: 0 12px; height: 40px; border: 1px solid #e9e7ed; border-radius: 8px; font: 400 14px/20px Mulish, sans-serif; color: #11002b; outline: none; }
     textarea.ad-input { height: auto; padding: 10px 12px; resize: vertical; }
     .ad-input:focus { border-color: #11002b; }

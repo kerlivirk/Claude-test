@@ -17,7 +17,9 @@ export type TransValues = Record<string, Record<string, string>>;
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
   template: `
-    <span class="tf-title">Translations</span>
+    @if (cols().length > 1) {
+      <span class="tf-title">Translated to {{ cols().length }} languages</span>
+    }
     <div class="tf-cols">
       @for (lang of cols(); track lang; let i = $index) {
         <div class="tf-col">
@@ -66,7 +68,9 @@ export type TransValues = Record<string, Record<string, string>>;
   `,
   styles: [`
     :host { display: block; }
-    .tf-title { display: block; font: 700 12px/16px Mulish, sans-serif; color: #11002b; margin-bottom: 6px; }
+    /* Quiet, muted — only shows when the user actively translated to >1
+       languages (so it functions as a count badge, not a section header). */
+    .tf-title { display: block; font: 500 12px/16px Mulish, sans-serif; color: #6d5f79; margin-bottom: 8px; letter-spacing: 0.2px; }
     .tf-cols { display: flex; gap: 16px; flex-wrap: wrap; }
     .tf-col { flex: 1 1 280px; min-width: 240px; }
     .tf-bar {
@@ -107,7 +111,14 @@ export type TransValues = Record<string, Record<string, string>>;
     .tf-bar-btn:disabled { opacity: .4; cursor: not-allowed; }
     .tf-bar-btn mat-icon { font-size: 15px; width: 15px; height: 15px; }
     .tf-field { margin-bottom: 12px; }
-    .tf-field-label { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/16px Mulish, sans-serif; color: #11002b; margin-bottom: 6px; }
+    /* The last field inside a column has no following input, so the bottom
+       margin was leaving a visible gap before any help text the parent puts
+       under the widget. */
+    .tf-field:last-child { margin-bottom: 0; }
+    /* Match the host form's .ts-label so "Displayed Name" / "Additional
+       description" inside the widget read at the same weight as the labels
+       on plain inputs elsewhere on the card. */
+    .tf-field-label { display: inline-flex; align-items: center; gap: 6px; font: 600 14px/20px Mulish, sans-serif; color: #11002b; margin-bottom: 6px; }
     .tf-req { color: #d92d20; }
     .tf-pill { height: 18px; padding: 0 6px; border-radius: 9999px; font: 600 10px/18px Mulish, sans-serif; }
     .tf-pill[data-c="0"] { background: #ddfbea; color: #19633d; }

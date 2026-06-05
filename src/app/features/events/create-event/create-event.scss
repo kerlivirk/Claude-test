@@ -142,28 +142,34 @@
   background: #fff;
 }
 
-/* ===== Series link bar (top of main column) ===== */
+/* ===== Series link bar (top of main column) =====
+   Standalone state = light green so users notice the "connect to a series"
+   affordance. Linked state stays purple (matches the rest of the series
+   identity in the app). */
 .ce-series-bar {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 32px;
-  background: #f5f0fc;
-  border-bottom: 1px solid var(--ce-stroke);
+  background: #e6f9ed;
+  border-bottom: 1px solid #b6e5c6;
   font: 500 13px/18px Mulish, sans-serif;
-  color: #2a1c44;
+  color: #14532d;
 
   &.linked {
     background: #ece2fb;
     border-bottom-color: #c8b6e7;
+    color: #2a1c44;
   }
 }
 .ce-series-bar-ico {
   font-size: 18px;
   width: 18px;
   height: 18px;
-  color: #7b5aa8;
+  color: #15803d;
   flex-shrink: 0;
+
+  .ce-series-bar.linked & { color: #7b5aa8; }
 }
 .ce-series-bar-label {
   font-weight: 700;
@@ -186,25 +192,30 @@
   color: #6b6479;
   margin-left: auto;
 }
+/* Disconnect button — bordered + filled so it reads as a real action,
+   not a quiet link. */
 .ce-series-bar-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 32px;
-  padding: 0 12px;
-  border: 1px solid transparent;
+  padding: 0 14px;
+  border: 1px solid #7b5aa8;
   border-radius: 6px;
-  background: transparent;
-  font: 600 12px/30px Mulish, sans-serif;
+  background: #fff;
+  font: 700 12px/30px Mulish, sans-serif;
   color: #7b5aa8;
   cursor: pointer;
   margin-left: auto;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 
   &:hover {
-    background: rgba(123, 90, 168, 0.1);
+    background: #7b5aa8;
+    color: #fff;
+    mat-icon { color: #fff; }
   }
 
-  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  mat-icon { font-size: 14px; width: 14px; height: 14px; color: #7b5aa8; }
 }
 
 .ce-topbar {
@@ -240,6 +251,18 @@
   line-height: 28px;
   letter-spacing: -0.2px;
   color: var(--ce-fg);
+}
+
+/* Clickable title — jumps to the Event Name section + focuses its input.
+   Per user-test feedback: editing the name from the topbar wasn't possible. */
+.ce-title-clickable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin-left: -6px;
+  transition: background 120ms ease;
+
+  &:hover { background: var(--ce-surface-tint, #f1ebfb); }
 }
 
 .ce-meta {
@@ -740,6 +763,25 @@
   strong { font-weight: 700; }
 }
 
+/* Toggle that expands the map preview. Map is decorative, not actionable,
+   so we collapse it by default to keep the Date & Venue section compact. */
+.ce-map-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--ce-stroke);
+  border-radius: 8px;
+  font: 600 12px/18px Mulish, sans-serif;
+  color: var(--ce-fg-muted, #6d5f79);
+  cursor: pointer;
+
+  &:hover { background: var(--ce-surface-soft, #f8f7f9); color: var(--ce-fg); }
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
 /* ===== Map ===== */
 .ce-map {
   position: relative;
@@ -812,6 +854,20 @@
 /* ===== Rich text ===== */
 .ce-richtext { margin-top: 16px; }
 
+/* Text block wrapper using the translations-field widget (replaces the old
+   ce-richtext + toolbar combo). Just spacing + a small sync-status row. */
+.ce-block {
+  margin-top: 16px;
+
+  &.ce-locked { opacity: 0.85; }
+}
+.ce-block-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
 .ce-richtext-head {
   display: flex;
   align-items: center;
@@ -877,6 +933,14 @@
   flex-direction: column;
   gap: 8px;
   margin-top: 12px;
+}
+
+/* Cap height + scroll once there's more than ~6 artists. Festivals can have
+   50+, which would otherwise blow out the section height. */
+.ce-lineup-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .ce-lineup-row {

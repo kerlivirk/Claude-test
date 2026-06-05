@@ -72,6 +72,80 @@ html, body {
 }
 ::-webkit-scrollbar-thumb:hover { background: #3d2b5d; }
 
+/* ===== Date / Time inputs (global) =====
+   All native pickers across the app share one visual language: a leading
+   calendar (date) / clock (time) icon, brand-purple focus, and a visible
+   picker indicator on the right edge. The native browser calendar still
+   opens on click — we just make the control look like a proper picker.
+
+   IMPORTANT: per-component .ts-input / .ce-input classes use the
+   `background:` shorthand which would otherwise wipe the icon, so the
+   icon-related properties are forced with `!important`. The icon stays
+   visible in default, hover, focus AND filled states. */
+
+input[type="date"],
+input[type="time"] {
+  background-color: #fff !important;
+  background-repeat: no-repeat !important;
+  background-position: 12px center !important;
+  background-size: 16px 16px !important;
+  background-origin: border-box !important;
+  padding-left: 36px !important;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* Calendar icon for date inputs (muted default) */
+input[type="date"] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236d5f79' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>") !important;
+}
+
+/* Clock icon for time inputs (muted default) */
+input[type="time"] {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236d5f79' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>") !important;
+}
+
+/* Focus state — leading icon turns brand-purple */
+input[type="date"]:focus {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237b5aa8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/><line x1='3' y1='10' x2='21' y2='10'/></svg>") !important;
+}
+input[type="time"]:focus {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237b5aa8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>") !important;
+}
+
+/* WebKit/Chrome: tidy the built-in picker indicator on the right edge.
+   The native one is small + faint by default; this makes it clearly clickable. */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0.65;
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 2px;
+  border-radius: 4px;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+input[type="date"]:hover::-webkit-calendar-picker-indicator,
+input[type="time"]:hover::-webkit-calendar-picker-indicator,
+input[type="date"]:focus::-webkit-calendar-picker-indicator,
+input[type="time"]:focus::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  background-color: rgba(123, 90, 168, 0.12);
+}
+
+/* Disabled state — fade the leading icon along with the value */
+input[type="date"]:disabled,
+input[type="time"]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* WebKit: align the rendered date/time text vertically with the icon */
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+  padding: 0;
+  line-height: 1;
+}
+
 /* Material density / typography overrides */
 .mat-mdc-form-field { font-family: Mulish, sans-serif; }
 .mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .mat-mdc-text-button {

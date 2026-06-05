@@ -45,7 +45,10 @@
       @if (activeGroup() === 'tickets') {
         <div class="ce-nav-sub">
           @for (t of ticketSections; track t.key) {
-            <button class="ce-nav-sub-item" (click)="scrollToTicket(t.key)">
+            <button
+              class="ce-nav-sub-item"
+              [class.active]="activeTicketKey() === t.key"
+              (click)="scrollToTicket(t.key)">
               <mat-icon class="ce-nav-sub-ico">{{ t.icon }}</mat-icon>
               {{ t.label }}
             </button>
@@ -105,7 +108,7 @@
           <mat-icon class="ce-chip-ico">Circle Clock</mat-icon>
           Scheduled
         </span>
-        <h1 class="ce-title">{{ eventName() }}</h1>
+        <h1 class="ce-title ce-title-clickable" (click)="focusEventName()" title="Click to edit the event name">{{ eventName() }}</h1>
         <div class="ce-meta">
           <span><mat-icon class="ce-meta-ico">Blank Calendar</mat-icon> {{ formatDate(eventDate()) }}</span>
           <span><mat-icon class="ce-meta-ico">Location Pin 1</mat-icon> {{ venue() }}</span>
@@ -187,6 +190,42 @@
         <p class="ce-help">Use the “+” on a language bar to translate the name into another language side by side.</p>
       </section>
 
+      <!-- Section: Slug (sits directly under Event Name) -->
+      <section class="ce-section" id="sec-slug">
+        <div class="ce-sec-head">
+          <div class="ce-sec-head-text">
+            <h2><mat-icon>Link Chain</mat-icon> Slug</h2>
+            <p>URL-friendly identifier for this event</p>
+          </div>
+        </div>
+
+        <label class="ce-checkbox">
+          <input type="checkbox" [checked]="autoSlug()" (change)="toggleAutoSlug()" />
+          <span>Auto-generate from event name</span>
+        </label>
+
+        <span class="ce-field-label">Slug</span>
+        <input class="ce-input" type="text" [ngModel]="slug()" (ngModelChange)="onSlugInput($event)" [disabled]="autoSlug()" placeholder="summer-concert-event-new" />
+        <p class="ce-help">
+          @if (autoSlug()) {
+            Generated automatically from the event name. Uncheck to edit it manually.
+          } @else {
+            Manual slug. Each event gets a unique URL.
+          }
+        </p>
+
+        @if (parentSeries(); as ps) {
+          <div class="ce-info-banner">
+            <mat-icon class="ce-info-ico">Information Circle</mat-icon>
+            <span>
+              <strong>Series Context:</strong>
+              This event is part of <strong>"{{ ps.name }}"</strong>. Its URL lives under the series:
+              /{{ ps.slug || 'series' }}/{{ slug() || 'event' }}
+            </span>
+          </div>
+        }
+      </section>
+
       <!-- Section: Cover Image -->
       <section class="ce-section" id="sec-cover">
         <div class="ce-sec-head">
@@ -227,42 +266,6 @@
         }
       </section>
 
-      <!-- Section: Slug -->
-      <section class="ce-section" id="sec-slug">
-        <div class="ce-sec-head">
-          <div class="ce-sec-head-text">
-            <h2><mat-icon>Link Chain</mat-icon> Slug</h2>
-            <p>URL-friendly identifier for this event</p>
-          </div>
-        </div>
-
-        <label class="ce-checkbox">
-          <input type="checkbox" [checked]="autoSlug()" (change)="toggleAutoSlug()" />
-          <span>Auto-generate from event name</span>
-        </label>
-
-        <span class="ce-field-label">Slug</span>
-        <input class="ce-input" type="text" [ngModel]="slug()" (ngModelChange)="onSlugInput($event)" [disabled]="autoSlug()" placeholder="summer-concert-event-new" />
-        <p class="ce-help">
-          @if (autoSlug()) {
-            Generated automatically from the event name. Uncheck to edit it manually.
-          } @else {
-            Manual slug. Each event gets a unique URL.
-          }
-        </p>
-
-        @if (parentSeries(); as ps) {
-          <div class="ce-info-banner">
-            <mat-icon class="ce-info-ico">Information Circle</mat-icon>
-            <span>
-              <strong>Series Context:</strong>
-              This event is part of <strong>"{{ ps.name }}"</strong>. Its URL lives under the series:
-              /{{ ps.slug || 'series' }}/{{ slug() || 'event' }}
-            </span>
-          </div>
-        }
-      </section>
-
       <!-- Section: Date & Venue -->
       <section class="ce-section" id="sec-date">
         <div class="ce-sec-head">
@@ -280,25 +283,31 @@
 
         <div class="ce-grid-2">
           <div class="ce-col">
-            <span class="ce-field-label">Start Date</span>
-            <input class="ce-input" type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" />
+            <span class="ce-field-label"><span class="ce-req">*</span> Start Date</span>
+            <input class="ce-input" type="date" [ngModel]="startDate()" (ngModelChange)="onStartDateChange($event)" />
           </div>
           <div class="ce-col">
-            <span class="ce-field-label">Start Time</span>
+            <span class="ce-field-label"><span class="ce-req">*</span> Start Time</span>
             <input class="ce-input" type="time" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)" />
           </div>
           <div class="ce-col">
-            <span class="ce-field-label">End Date</span>
-            <input class="ce-input" type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" />
+            <span class="ce-field-label">Doors open time <span class="ce-optional">(optional)</span></span>
+            <input class="ce-input" type="time" [ngModel]="doorsTime()" (ngModelChange)="doorsTime.set($event)" />
           </div>
           <div class="ce-col">
-            <span class="ce-field-label">End Time</span>
+            <span class="ce-field-label">Duration <span class="ce-optional">(optional)</span></span>
+            <input class="ce-input" type="text" [ngModel]="eventLength()" (ngModelChange)="eventLength.set($event)" placeholder="e.g. 90 min" />
+          </div>
+          <div class="ce-col">
+            <span class="ce-field-label">End Date</span>
+            <input class="ce-input" type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" [min]="startDate()" />
+          </div>
+          <div class="ce-col">
+            <span class="ce-field-label">End Time <span class="ce-optional">(optional)</span></span>
             <input class="ce-input" type="time" [ngModel]="endTime()" (ngModelChange)="endTime.set($event)" />
           </div>
         </div>
-
-        <span class="ce-field-label">Doors open time</span>
-        <input class="ce-input" type="time" [ngModel]="doorsTime()" (ngModelChange)="doorsTime.set($event)" />
+        <p class="ce-help" style="margin-top: 6px;">End time is used to stop ticket sales after the show and for ticket-control timing. Leave empty if the event has no fixed end (e.g. a late-night party).</p>
 
         <h3 class="ce-subhead"><mat-icon>Location Pin 1</mat-icon> Event location</h3>
         <span class="ce-field-label">Venue</span>
@@ -307,21 +316,28 @@
           <span class="ce-venue-verified"><mat-icon>Check Circle</mat-icon></span>
         </div>
 
-        <div class="ce-map">
-          <div class="ce-map-grid"></div>
-          <div class="ce-map-pin"><mat-icon>Location Pin 1</mat-icon></div>
-          <div class="ce-map-zoom">
-            <button><mat-icon>Add 1</mat-icon></button>
-            <button><mat-icon>Block 1</mat-icon></button>
-          </div>
-          <div class="ce-map-callout">
-            <mat-icon>Location Pin 1</mat-icon>
-            <div>
-              <strong>{{ venue() || 'Venue' }}</strong>
-              <small>Paldiski mnt 104b, Tallinn</small>
+        <button class="ce-map-toggle" type="button" (click)="showVenueMap.update(v => !v)" [attr.aria-expanded]="showVenueMap()">
+          <mat-icon>{{ showVenueMap() ? 'Tailless Line Arrow Down 1' : 'Tailless Line Arrow Right 1' }}</mat-icon>
+          {{ showVenueMap() ? 'Hide map preview' : 'Show map preview' }}
+        </button>
+
+        @if (showVenueMap()) {
+          <div class="ce-map">
+            <div class="ce-map-grid"></div>
+            <div class="ce-map-pin"><mat-icon>Location Pin 1</mat-icon></div>
+            <div class="ce-map-zoom">
+              <button><mat-icon>Add 1</mat-icon></button>
+              <button><mat-icon>Block 1</mat-icon></button>
+            </div>
+            <div class="ce-map-callout">
+              <mat-icon>Location Pin 1</mat-icon>
+              <div>
+                <strong>{{ venue() || 'Venue' }}</strong>
+                <small>Paldiski mnt 104b, Tallinn</small>
+              </div>
             </div>
           </div>
-        </div>
+        }
       </section>
 
       <!-- Section: Text blocks -->
@@ -334,45 +350,27 @@
         </div>
 
         @for (block of textBlocks; track block.key) {
-          <div class="ce-richtext" [class.ce-locked]="syncedTextKey(block.key)">
-            <div class="ce-richtext-head">
-              <span class="ce-field-label">
-                <span class="ce-req">*</span> {{ block.label }} <span class="ce-lang-pill">English</span>
-                @if (syncedTextKey(block.key)) {
-                  <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
-                }
-              </span>
-              @if (parentSeries()) {
+          <div class="ce-block" [class.ce-locked]="syncedTextKey(block.key)">
+            @if (parentSeries()) {
+              <div class="ce-block-head">
                 <label class="ce-sync ce-sync-sm">
                   Sync
                   <span class="ce-toggle ce-toggle-sm" [class.on]="syncTextFlag(block.key)" [class.hint]="syncedTextKey(block.key)" (click)="requestSyncToggle($any(block.key))">
                     <span class="ce-toggle-knob"></span>
                   </span>
                 </label>
-              }
-            </div>
-            <div class="ce-richtext-toolbar">
-              <button>H<sub>1</sub></button>
-              <button>H<sub>2</sub></button>
-              <button>H<sub>3</sub></button>
-              <span class="ce-rt-sep"></span>
-              <button><strong>B</strong></button>
-              <button><em>I</em></button>
-              <button><u>U</u></button>
-              <span class="ce-rt-sep"></span>
-              <button><mat-icon>Text File</mat-icon></button>
-              <button><mat-icon>Text File</mat-icon></button>
-              <span class="ce-rt-sep"></span>
-              <button><mat-icon>Link Chain</mat-icon></button>
-              <button><mat-icon>Tailless Line Arrow Left 1</mat-icon></button>
-              <button><mat-icon>Tailless Line Arrow Right 1</mat-icon></button>
-            </div>
-            <textarea
-              class="ce-richtext-area"
-              rows="5"
-              [ngModel]="textBlockValue(block.key)"
-              (ngModelChange)="onTextBlockInput(block.key, $event)"
-              [disabled]="syncedTextKey(block.key)"></textarea>
+                @if (syncedTextKey(block.key)) {
+                  <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+                }
+              </div>
+            }
+            <app-translations-field
+              [fields]="fieldsForBlock(block.key)"
+              [languages]="languages"
+              [baseLang]="baseLang"
+              [disabled]="syncedTextKey(block.key)"
+              [values]="valuesForBlock(block.key)"
+              (valuesChange)="onBlockValuesChange(block.key, $event)" />
             <p class="ce-help">
               @if (syncedTextKey(block.key)) {
                 Inherited from the series. Turn off "Sync with series" to override.
@@ -391,7 +389,7 @@
         <div class="ce-sec-head">
           <div class="ce-sec-head-text">
             <h2><mat-icon>Dashboard Square</mat-icon> Category</h2>
-            <p>Changes here affect only this date</p>
+            <p>Category drives where your event appears on the public portal (e.g. under Music, Theatre). Subcategory narrows it within a category (e.g. Rock under Music).</p>
           </div>
           @if (parentSeries()) {
             <label class="ce-sync">
@@ -419,10 +417,10 @@
             searchPlaceholder="Search categories…"
             [allowCreate]="true" />
         </div>
-        <p class="ce-help">Select one or more categories. Click to add/remove.</p>
+        <p class="ce-help">Predefined list maintained centrally. Pick one or more.</p>
 
         <span class="ce-field-label">
-          Tags
+          Subcategory <span class="ce-optional">(optional)</span>
           @if (isSyncedCategory()) {
             <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
           }
@@ -433,21 +431,21 @@
             [value]="tags()"
             (valueChange)="onTagsInput($event)"
             [disabled]="isSyncedCategory()"
-            placeholder="Select Genre, like Ballet, Comedy…"
-            searchPlaceholder="Search genres…"
+            placeholder="e.g. Rock, Ballet, Comedy…"
+            searchPlaceholder="Search subcategories…"
             [allowCreate]="true" />
         </div>
         @if (isSyncedCategory()) {
           <span class="ce-locked-hint"><mat-icon>Link Chain</mat-icon> Locked to series — click the toggle to edit</span>
         }
-        <p class="ce-help">Select one or more genres. Click to add/remove.</p>
+        <p class="ce-help">Subcategories are scoped to your selected categories.</p>
       </section>
 
-      <!-- Section: Lineup (artists from database) -->
+      <!-- Section: Artists (renamed from "Lineup" — Arturs: "this is not lineup, it's artists connected to the event") -->
       <section class="ce-section" id="sec-lineup">
         <div class="ce-sec-head">
           <div class="ce-sec-head-text">
-            <h2><mat-icon>User Group</mat-icon> Lineup</h2>
+            <h2><mat-icon>User Group</mat-icon> Artists</h2>
             <p>Artists from the database. {{ isSyncedLineup() ? 'Inherited from series — turn off sync to customize for this date.' : 'Changes here affect only this date.' }}</p>
           </div>
           @if (parentSeries()) {
@@ -468,7 +466,7 @@
         </p>
 
         @if (lineup().length > 0) {
-          <div class="ce-lineup" [class.ce-locked]="isSyncedLineup()">
+          <div class="ce-lineup ce-lineup-scroll" [class.ce-locked]="isSyncedLineup()">
             @for (slot of lineup(); track slot.id) {
               <button class="ce-lineup-row" (click)="openArtist(slot)" [disabled]="isSyncedLineup()">
                 <mat-icon class="ce-lineup-drag">Vertical Menu</mat-icon>
@@ -486,29 +484,29 @@
             }
           </div>
         } @else {
-          <div class="ce-lineup-empty">No artists yet. Use "Add slot" to add performers.</div>
+          <div class="ce-lineup-empty">No artists yet. Use "Add Artist" to add performers.</div>
         }
 
         @if (!isSyncedLineup()) {
           <button class="ce-btn ce-btn-primary ce-add-btn" (click)="openAddArtist()">
             <mat-icon>Add 1</mat-icon>
-            Add slot
+            Add Artist
           </button>
         } @else {
           <span class="ce-locked-hint"><mat-icon>Link Chain</mat-icon> Locked to series — click the toggle to edit</span>
         }
       </section>
 
-      <!-- Section: Internal Information -->
+      <!-- Section: Cashier Instructions (renamed from "Internal Information") -->
       <section class="ce-section" id="sec-internal">
         <div class="ce-sec-head">
           <div class="ce-sec-head-text">
             <h2>
               <mat-icon>Chat Bubble Text Oval</mat-icon>
-              Internal Information
+              Cashier Instructions
               <span class="ce-badge ce-badge-purple">Not public</span>
             </h2>
-            <p>Visible only to internal users, cashiers, and POS terminal employees. Not shown to public.</p>
+            <p>Notes for cashiers and POS terminals. Not shown to ticket buyers.</p>
           </div>
           @if (parentSeries()) {
             <label class="ce-sync">
@@ -530,37 +528,19 @@
         </div>
 
         @for (block of internalBlocks; track block.key) {
-          <div class="ce-richtext" [class.ce-locked]="syncedInternalKey(block.key)">
-            <div class="ce-richtext-head">
-              <span class="ce-field-label">
-                {{ block.label }} <span class="ce-lang-pill">English</span>
-                @if (syncedInternalKey(block.key)) {
-                  <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
-                }
-              </span>
-            </div>
-            <div class="ce-richtext-toolbar">
-              <button>H<sub>1</sub></button>
-              <button>H<sub>2</sub></button>
-              <button>H<sub>3</sub></button>
-              <span class="ce-rt-sep"></span>
-              <button><strong>B</strong></button>
-              <button><em>I</em></button>
-              <button><u>U</u></button>
-              <span class="ce-rt-sep"></span>
-              <button><mat-icon>Text File</mat-icon></button>
-              <button><mat-icon>Text File</mat-icon></button>
-              <span class="ce-rt-sep"></span>
-              <button><mat-icon>Link Chain</mat-icon></button>
-              <button><mat-icon>Tailless Line Arrow Left 1</mat-icon></button>
-              <button><mat-icon>Tailless Line Arrow Right 1</mat-icon></button>
-            </div>
-            <textarea
-              class="ce-richtext-area"
-              rows="4"
-              [ngModel]="internalBlockValue(block.key)"
-              (ngModelChange)="onInternalBlockInput(block.key, $event)"
-              [disabled]="syncedInternalKey(block.key)"></textarea>
+          <div class="ce-block" [class.ce-locked]="syncedInternalKey(block.key)">
+            @if (syncedInternalKey(block.key)) {
+              <div class="ce-block-head">
+                <span class="ce-sync-tag"><mat-icon>Link Chain</mat-icon> Synced from series</span>
+              </div>
+            }
+            <app-translations-field
+              [fields]="fieldsForBlock(block.key)"
+              [languages]="languages"
+              [baseLang]="baseLang"
+              [disabled]="syncedInternalKey(block.key)"
+              [values]="valuesForBlock(block.key)"
+              (valuesChange)="onBlockValuesChange(block.key, $event)" />
             <p class="ce-help">
               @if (syncedInternalKey(block.key)) {
                 Inherited from the series. Turn off "Sync with series" to override.

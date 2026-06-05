@@ -63,13 +63,13 @@ export class CreateEventComponent implements OnInit {
 
   readonly detailSections: DetailSection[] = [
     { key: 'name', label: 'Event Name', icon: 'Text Style' },
-    { key: 'cover', label: 'Cover Image', icon: 'Image' },
     { key: 'slug', label: 'Slug', icon: 'Link Chain' },
+    { key: 'cover', label: 'Cover Image', icon: 'Image' },
     { key: 'date', label: 'Date & Venue', icon: 'Location Pin 1' },
     { key: 'text', label: 'Text blocks', icon: 'Text File' },
     { key: 'category', label: 'Category', icon: 'Dashboard Square' },
-    { key: 'lineup', label: 'Lineup', icon: 'User Group' },
-    { key: 'internal', label: 'Internal Information', icon: 'Chat Bubble Text Oval' },
+    { key: 'lineup', label: 'Artists', icon: 'User Group' },
+    { key: 'internal', label: 'Cashier Instructions', icon: 'Chat Bubble Text Oval' },
   ];
 
   readonly textBlocks: TextBlock[] = [
@@ -77,20 +77,26 @@ export class CreateEventComponent implements OnInit {
     { key: 'description', label: 'Event Description' },
   ];
 
+  /** POS Notes removed per Arturs: cashiers use POS, so separate POS Notes
+   *  added no signal vs. Cashier Instructions. One field, one audience. */
   readonly internalBlocks: TextBlock[] = [
     { key: 'cashier', label: 'Cashier Instructions' },
-    { key: 'pos', label: 'POS Notes' },
   ];
 
   activeGroup = signal<'details' | 'tickets' | null>('details');
   activeSection = signal<DetailSectionKey | 'tickets' | 'extras' | 'summary'>('name');
+  /** Active ticket sub-section (driven by scroll-spy + click) so the
+   *  left-rail nav can highlight the right item while the user scrolls
+   *  through the tickets step. */
+  activeTicketKey = signal<string>('tk-source');
 
   readonly ticketSections = [
     { key: 'tk-source', label: 'Sales source', icon: 'Ticket' },
+    { key: 'tk-places', label: 'Tickets setup', icon: 'Location Pin 1' },
     { key: 'tk-sale', label: 'Sale period', icon: 'Circle Clock' },
     { key: 'tk-categories', label: 'Price categories', icon: 'Tag' },
-    { key: 'tk-places', label: 'Places', icon: 'Location Pin 1' },
     { key: 'tk-rules', label: 'Ticket rules', icon: 'Cog 1' },
+    { key: 'tk-sales-overview', label: 'Sales overview', icon: 'Pie Chart' },
   ];
 
   /* Mobile: the section nav (table of contents) opens as a drawer */
@@ -103,8 +109,22 @@ export class CreateEventComponent implements OnInit {
   }
   scrollToTicket(anchor: string) {
     this.activeSection.set('tickets');
+    this.activeTicketKey.set(anchor);
     this.sidebarOpen.set(false);
     setTimeout(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  }
+
+  /** Topbar title click — jumps the user to the Event Name section so they
+   *  can edit it inline (was hidden inside the form per user test feedback). */
+  focusEventName() {
+    this.activeSection.set('name');
+    setTimeout(() => {
+      const section = document.getElementById('sec-name');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Focus the first text input inside the translations-field for the name.
+      const input = section?.querySelector('app-translations-field input') as HTMLInputElement | null;
+      input?.focus();
+    }, 80);
   }
 
   private readonly detailKeys: string[] = ['name', 'cover', 'slug', 'date', 'text', 'category', 'lineup', 'internal'];
@@ -207,6 +227,21 @@ export class CreateEventComponent implements OnInit {
   endDate = signal('2026-04-18');
   endTime = signal('23:00');
   doorsTime = signal('18:00');
+  eventLength = signal('');
+
+  /** Map preview is collapsed by default — it's decorative, not actionable.
+   *  User can expand it explicitly if they want to verify the location. */
+  showVenueMap = signal(false);
+
+  /** Auto-shift end date forward when start date moves past it. Per user-test
+   *  feedback (Klára): "if I change the start date, I would automatically
+   *  change also the end date" — and end < start should never be valid. */
+  onStartDateChange(v: string) {
+    this.startDate.set(v);
+    if (v && (!this.endDate() || this.endDate() < v)) {
+      this.endDate.set(v);
+    }
+  }
 
   onSlugInput(v: string) { this.autoSlug.set(false); this.slug.set(v); }
 
@@ -454,18 +489,36 @@ export class CreateEventComponent implements OnInit {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /* Scroll-spy: highlight the nav sub-item for whichever detail section is in view */
+  /* Scroll-spy: highlight the nav sub-item for whichever section is in view.
+     Handles both modes:
+       - Details mode → which detail section is at the top → activeSection
+       - Tickets mode → which ticket sub-section is at the top → activeTicketKey */
   onFormScroll(container: HTMLElement) {
-    if (this.mode() !== 'details') return;
     const refTop = container.getBoundingClientRect().top + 96;
-    let current: DetailSectionKey = this.detailSections[0].key;
-    for (const s of this.detailSections) {
-      const el = document.getElementById('sec-' + s.key);
-      if (el && el.getBoundingClientRect().top <= refTop) current = s.key;
+
+    if (this.mode() === 'details') {
+      let current: DetailSectionKey = this.detailSections[0].key;
+      for (const s of this.detailSections) {
+        const el = document.getElementById('sec-' + s.key);
+        if (el && el.getBoundingClientRect().top <= refTop) current = s.key;
+      }
+      if (this.activeSection() !== current) {
+        this.activeSection.set(current);
+        document.querySelector('.ce-nav-sub-item.active')?.scrollIntoView({ block: 'nearest' });
+      }
+      return;
     }
-    if (this.activeSection() !== current) {
-      this.activeSection.set(current);
-      document.querySelector('.ce-nav-sub-item.active')?.scrollIntoView({ block: 'nearest' });
+
+    if (this.mode() === 'tickets') {
+      let current: string = this.ticketSections[0].key;
+      for (const s of this.ticketSections) {
+        const el = document.getElementById(s.key);
+        if (el && el.getBoundingClientRect().top <= refTop) current = s.key;
+      }
+      if (this.activeTicketKey() !== current) {
+        this.activeTicketKey.set(current);
+        document.querySelector('.ce-nav-sub-item.active')?.scrollIntoView({ block: 'nearest' });
+      }
     }
   }
 
@@ -526,6 +579,73 @@ export class CreateEventComponent implements OnInit {
     const rest: TransValues = { ...v };
     delete rest[this.baseLang];
     this.nameTrans.set(rest);
+  }
+
+  /** Translations for text blocks (Important Information, Event Description,
+   *  Cashier Instructions). Single store keyed by langCode → fieldKey → value
+   *  — the base-lang value lives on the matching local signal and is merged
+   *  in at render time. Mirrors the series-config-dialog approach. */
+  private blockTrans = signal<TransValues>({});
+
+  /** Display label per block key — shown in the translation-widget header. */
+  private blockLabel(key: string): string {
+    switch (key) {
+      case 'important': return 'Important Information';
+      case 'description': return 'Event Description';
+      case 'cashier': return 'Cashier Instructions';
+      default: return key;
+    }
+  }
+
+  /** Effective base-language value for a block — series value when synced,
+   *  else the local override. */
+  private blockBaseValue(key: string): string {
+    switch (key) {
+      case 'important': return this.importantInfo();
+      case 'description': return this.description();
+      case 'cashier': return this.cashierInfo();
+      default: return '';
+    }
+  }
+
+  /** Apply a new base-language value back to the right local signal (only
+   *  when the block isn't synced from a series). */
+  private setBlockBase(key: string, v: string) {
+    if (this.syncedTextKey(key)) return;
+    switch (key) {
+      case 'important': this.localImportant.set(v); break;
+      case 'description': this.localDescription.set(v); break;
+      case 'cashier': this.localCashier.set(v); break;
+    }
+  }
+
+  /** TransField[] for a block — multiline textarea variant. */
+  fieldsForBlock(key: string): TransField[] {
+    return [{ key, label: this.blockLabel(key), multiline: true }];
+  }
+
+  /** TransValues for a block — base-lang value + per-lang slices from blockTrans. */
+  valuesForBlock(key: string): TransValues {
+    const out: TransValues = { [this.baseLang]: { [key]: this.blockBaseValue(key) } };
+    for (const [lang, fields] of Object.entries(this.blockTrans())) {
+      if (lang === this.baseLang) continue;
+      out[lang] = { [key]: fields[key] ?? '' };
+    }
+    return out;
+  }
+
+  /** Persist a block's TransValues — base goes to the matching local signal,
+   *  the rest into blockTrans. */
+  onBlockValuesChange(key: string, v: TransValues) {
+    this.setBlockBase(key, v[this.baseLang]?.[key] ?? '');
+    this.blockTrans.update(prev => {
+      const next: TransValues = { ...prev };
+      for (const [lang, fields] of Object.entries(v)) {
+        if (lang === this.baseLang) continue;
+        next[lang] = { ...(next[lang] ?? {}), [key]: fields[key] ?? '' };
+      }
+      return next;
+    });
   }
 
   share() {
